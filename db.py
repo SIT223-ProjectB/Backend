@@ -1,11 +1,12 @@
 #!/usr/bin/python3.7
 
+from datetime import datetime
 from passlib.apps import custom_app_context as pwd_context
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
 
 from __init__ import db, app
 
-
+# Users Table
 class User(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	username = db.Column(db.String(50), unique=True, nullable=False)
@@ -36,3 +37,20 @@ class User(db.Model):
 			return None
 		user = User.query.get(data['id'])
 		return user 
+
+# Asset Table
+class Assets(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	type = db.Column(db.String(50), nullable=False)
+	tracking_code = db.Column(db.String(20), nullable=False, unique=True)
+	time_created = db.Column(db.DateTime, default=datetime.utcnow)
+	status = db.relationship('AssetStatus', backref="asset", lazy=True)
+
+# Asset Status
+class AssetStatus(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	ass_id = db.Column(db.String(20), db.ForeignKey('assets.tracking_code'), unique=True, nullable=False)
+	status = db.Column(db.Integer, default=1)
+	note = db.Column(db.Text, nullable=False)
+	location = db.Column(db.String(255), nullable=False)
+	last_updated = db.Column(db.DateTime, default=datetime.utcnow)
