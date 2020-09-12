@@ -46,13 +46,14 @@ db.create_all()
 
 # Add users here to be inserted by default
 users = [
-	{'username': 'jnunn', 'password': 'password', 'name': 'Jeremy N'}
+	{'username': 'jnunn', 'password': 'password', 'name': 'Jeremy N', 'active': True},
+	{'username': 'dev', 'password': 'password', 'name': 'Developer Account', 'active': False}
 ]
 
 for u in users:
 	user = User(username = u.get('username'), name = u.get('name'))
 	user.hash_password(u.get('password'))
-	user.active = True
+	user.active = u.get('active')
 	db.session.add(user)
 	db.session.commit()
 

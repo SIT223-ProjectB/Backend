@@ -1,0 +1,109 @@
+{% extends "main.html" %}
+{% block title %}SIT223 Group 46{% endblock %}
+{% block content %}
+<div class="card">
+	<div class="card-block pb-3">
+		<nav class="navbar navbar-expand navbar-light bg-light">
+			<span class="navbar-brand mb-0 h1">Asset Tracker</span>
+			<div class="collapse navbar-collapse justify-content-end">
+				<div class="navbar-nav">
+					<a class="nav-item nav-link active" href="#">Dashboard</a>
+					<a class="nav-item nav-link" href="#">Assets</a>
+					<a class="nav-item nav-link" href="#">Users</a>
+					<span class="px-5"></span>
+					<div class="nav-item py-2 navbar-text">Logged in as <span class="font-weight-bold">{{ g.user.name }}</span></div>
+					<span class="px-3"></span>
+					<a class="nav-item btn btn-danger btn-sm py-2 text-white" href="{{ url_for('api.logout_user') }}">Logout</a>
+				</div>
+			</div> 
+
+		</nav>
+	</div>
+	<div class="card-block">
+		
+	</div>
+	<div class="card-block">
+		<div class="row pl-5">
+			<div class="col-3 mx-2">
+				<div class="card">
+					<div class="card-body text-center">
+						<h5 class="card-title mb-0">Users</h5>
+						<p class="card-text">The most active recent users</p>
+					</div>
+					<ul class="list-group list-group-flush text-center">
+					{% for u in list_users_quick() %}
+						<li class="list-group-item"><a href="#">{{ u.name }} ({{ u.username }})</a></li>
+				 	{% endfor %}
+					</ul>
+				</div>
+			</div>
+			<div class="col-3 mx-2">
+				<div class="card">
+					<div class="card-body text-center">
+						<h5 class="card-title mb-0">Assets</h5>
+						<p class="card-text">Latest Updated Assets</p>
+					</div>
+					<ul class="list-group list-group-flush text-center">
+					{% for a in latest_updated_assets() %}
+						<li class="list-group-item"><a href="#" class="asset" asset-id="{{ a.id }}">#{{ a.id }} - {{ a.type }} ({{ a.last_update }})</a></li>
+				 	{% endfor %}
+					</ul>
+				</div>
+			</div>
+			<div class="col-5 mx-2">
+				<div class="card">
+					<div class="card-body text-center">
+						<h5 class="card-title mb-0">Asset Information</h5>
+						<p class="card-text">Further asset information</p>
+					</div>
+					<ul class="list-group list-group-flush text-center" id="asset-info">
+						<li class="list-group-item font-italic font-weight-light">Select an asset to view</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="card-block py-3"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript">
+	$(document).ready(function() {
+		$('a.asset').on('click', function(e) {
+			e.preventDefault()
+			var asset = $(this).attr('asset-id')
+			$.ajax({
+				type: "POST",
+				url: "{{ url_for('api.get_asset') }}",
+				contentType: "application/json",
+				dataType: "json",
+				data: JSON.stringify({"tracking_code": asset}),
+				success: function(res) {
+					if (res.success == true) {
+						$('#asset-info').empty()
+						var data = res.results
+						console.log(data)
+						$('#asset-info').append(`
+							<li class="list-group-item text-left">
+								<b>Tracking Code:</b> #${data.tracking_code}
+							</li>
+							<li class="list-group-item text-left">
+								<b>Asset Type: </b> ${data.type}
+							</li>
+							<li class="list-group-item text-left">
+								<b>Location:</b> ${data.location}
+							</li>
+							<li class="list-group-item text-left">
+								<b>Note:</b> ${data.note}
+							</li>
+							<li class="list-group-item text-left">
+								<b>Last Update:</b> ${data.last_updated}
+							</li>
+						`);
+					}
+				}
+			})
+		})
+	})
+</script>
+{% endblock %}

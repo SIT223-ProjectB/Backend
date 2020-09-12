@@ -1,6 +1,6 @@
 #!/usr/bin/python3.7
 
-from flask import Blueprint, jsonify, abort, request, g
+from flask import Blueprint, jsonify, abort, request, g, redirect, session, url_for
 from flask_httpauth import HTTPBasicAuth
 
 from db import db, User, Assets, AssetStatus
@@ -13,16 +13,51 @@ auth = HTTPBasicAuth()
 # 
 @auth.verify_password
 def _verify_password(username_or_tok, password):
-	# Try to verify based on auth token
-	user = User.verify_auth_token(username_or_tok)
+	# Try to verify based on session
+	uid = session.get('user')
+	if not uid:
+		return redirect(url_for('ui.ui_login'))
+	user = User.query.filter_by(id=int(uid), active=True).first()
 	if not user:
-		# Get the user object
-		user = User.query.filter_by(username = username_or_tok).first()
-		# if its invalid or passord is wrong
-		if not user or not user.verify_password(password):
-			return False
+		# Try to verify based on auth token
+		user = User.verify_auth_token(username_or_tok)
+		if not user:
+			# Get the user object
+			user = User.query.filter_by(username = username_or_tok, active=True).first()
+			# if its invalid or passord is wrong
+			if not user or not user.verify_password(password):
+				return False
 	g.user = user
 	return True
+
+#
+# Login User
+#
+@api.route('/login', methods=['GET'])
+def login_user():
+	try:
+		# Check if user supplied their auth token
+		if not request.args.get('token'):
+			return redirect(url_for('ui.ui_login'))
+		# Check if user is valid
+		user = User.verify_auth_token(request.args.get('token'))
+		if not user:
+			return redirect(url_for('ui.ui_login'))
+		# Clear and create a new session
+		session.clear()
+		session['user'] = user.id
+		# Successful Auth
+		return redirect(url_for('ui.ui_index'))
+	except Exception as e:
+		print(e)
+		abort(401, "Not Authorized")
+#
+# Logout User
+#
+@api.route('/logout', methods=['GET'])
+def logout_user():
+	session.clear()
+	return redirect(url_for('ui.ui_login'))
 
 # Creation of a new user
 #

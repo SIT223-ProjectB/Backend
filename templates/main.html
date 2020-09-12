@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>{% block title %}{% endblock %}</title>
+	{% include "header.html" %}
+</head>
+<body>
+	<div class="container-fluid" style="margin-top: 2vh;">
+		<div class="row">
+			<div class="offset-1 col-10">
+				{% block content %}{% endblock %}
+			</div>
+		</div>
+	</div>
+	{% include "footer.html" %}
+	{% block scripts %}{% endblock %}
+</body>
+</html>
