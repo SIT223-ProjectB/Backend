@@ -142,12 +142,14 @@ def get_asset():
 			"tracking_code": entity_encode(asset.tracking_code),
 			"type": entity_encode(asset.type),
 			"time_created": asset.time_created,
-			"status": asset.status[0].status,
+			"status": entity_encode(asset.status[0].status),
+			"def_location": entity_encode(asset.status[0].def_location),
 			"location": entity_encode(asset.status[0].location),
 			"note": entity_encode(asset.status[0].note),
 			"last_updated": asset.status[0].last_updated
 			}
-	except:
+	except Exception as e:
+		print(e)
 		abort(500, 'An unknown error occured whilst trying to get an asset!')
 	return jsonify({'success': 1, 'results': results})
 
@@ -183,7 +185,8 @@ def search_assets():
 			"tracking_code": entity_encode(a.tracking_code),
 			"type": entity_encode(a.type),
 			"time_created": a.time_created,
-			"status": a.status[0].status,
+			"status": entity_encode(a.status[0].status),
+			"def_location": entity_encode(a.status[0].def_location),
 			"location": entity_encode(a.status[0].location),
 			"note": entity_encode(a.status[0].note),
 			"last_updated": a.status[0].last_updated
@@ -206,10 +209,11 @@ def add_asset():
 		asset_type = request.json.get('type')
 		asset_code = request.json.get('tracking_code')
 		asset_note = request.json.get('note')
+		asset_def_location = request.get('def_location')
 		asset_location = request.get('location')
 	except:
 		abort(400, "Missing Arguments")
-	if asset_type is None or asset_code is None or asset_note is None or asset_location is None:
+	if asset_type is None or asset_code is None or asset_note is None or asset_def_location is None or asset_location is None:
 		abort(400, "Missing Arguments")
 	if Assets.query.filter_by(tracking_code = asset_code).first() is not None:
 		abort(400, "Asset Tracking Code in USE!")
@@ -217,7 +221,7 @@ def add_asset():
 	try:
 		# Create the asset
 		asset = Assets(type = asset_type, tracking_code = asset_code)
-		assetstatus = AssetStatus(ass_id = asset_code, note = asset_note, location = asset_location)
+		assetstatus = AssetStatus(ass_id = asset_code, note = asset_note, def_location = asset_def_location, location = asset_location)
 		# add to the db
 		db.session.add(asset)
 		db.session.add(assetstatus)
@@ -269,10 +273,11 @@ def asset_status_update():
 		status = request.json.get('status')
 		print(status)
 		note = request.json.get('note')
+		def_location = request.json.get('def_location')
 		location = request.json.get('location')
 	except:
 		abort(400, 'Missing Arguments')
-	if asset_code is None or (asset_type is None and status is None and note is None and location is None):
+	if asset_code is None or (asset_type is None and status is None and note is None and def_location is None and location is None):
 		abort(400, 'Missing Arguments')
 	asset_code = asset_code[1:] if asset_code[0] == '#' else asset_code
 	try:
@@ -282,9 +287,11 @@ def asset_status_update():
 		if asset_type:
 			assetstatus.asset.type = asset_type
 		if status:
-			assetstatus.status = int(status)
+			assetstatus.status = status
 		if note:
 			assetstatus.note = note
+		if def_location:
+			assetstatus.def_location = def_location
 		if location:
 			assetstatus.location = location
 		assetstatus.last_updated = datetime.utcnow()

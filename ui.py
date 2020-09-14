@@ -53,8 +53,7 @@ def utility_processor():
 				last_update = f"{last_update.days} days ago"
 			else:
 				last_update = f"{last_update.weeks} weeks ago"
-			status = ['Needs Repairs', 'Available', 'Unavailable', 'In Use', 'Deployed'][a.status]
-			assets.append(dict(id=a.ass_id, type=a.asset.type, last_update=last_update, status=status, location=a.location, note=a.note))
+			assets.append(dict(id=a.ass_id, type=a.asset.type, last_update=last_update, status=a.status, def_location=a.def_location, location=a.location, note=a.note))
 		return assets
 
 	def latest_updated_assets(days=3, limit=10):
@@ -70,8 +69,7 @@ def utility_processor():
 				last_update = f"{last_update.days} days ago"
 			else:
 				last_update = f"{last_update.weeks} weeks ago"
-			status = ['Needs Repairs', 'Available', 'Unavailable', 'In Use', 'Deployed'][a.status]
-			assets.append(dict(id=a.ass_id, type=a.asset.type, last_update=last_update, status=status, location=a.location, note=a.note))
+			assets.append(dict(id=a.ass_id, type=a.asset.type, last_update=last_update, status=a.status, def_location=a.def_location, location=a.location, note=a.note))
 		return assets[:limit]
 
 	return dict(list_users_quick=list_users_quick, get_all_assets=get_all_assets, latest_updated_assets=latest_updated_assets, escape=escape)

@@ -50,7 +50,10 @@ class Assets(db.Model):
 class AssetStatus(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	ass_id = db.Column(db.String(20), db.ForeignKey('assets.tracking_code'), unique=True, nullable=False)
-	status = db.Column(db.Integer, default=1)
+	#status = db.Column(db.Integer, default=1)
+	status = db.Column(db.String(255), nullable=False)
 	note = db.Column(db.Text, nullable=False)
 	location = db.Column(db.String(255), nullable=False)
+	def_location = db.Column(db.String(255), nullable=False)
 	last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+

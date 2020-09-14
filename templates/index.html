@@ -8,7 +8,13 @@
 			<div class="collapse navbar-collapse justify-content-end">
 				<div class="navbar-nav">
 					<a class="nav-item nav-link active" href="{{ url_for('ui.ui_index') }}">Dashboard</a>
-					<a class="nav-item nav-link" href="{{ url_for('ui.ui_assets') }}">Assets</a>
+					<div class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Assets</a>
+						<div class="dropdown-menu">
+							<a class="dropdown-item" href="{{ url_for('ui.ui_assets') }}">Assets</a>
+							<a class="dropdown-item" href="#">Add Asset</a>
+						</div>
+					</div>
 					<a class="nav-item nav-link" href="#">Users</a>
 					<span class="px-5"></span>
 					<div class="nav-item py-2 navbar-text">Logged in as <span class="font-weight-bold">{{ g.user.name }}</span></div>
@@ -82,24 +88,6 @@
 					if (res.success == true) {
 						$('#asset-info').empty()
 						var data = res.results
-						var status = ""
-						switch (data.status) {
-							case 0:
-								status = "Needs Repairs"
-								break;
-							case 1:
-								status = "Available"
-								break;
-							case 2:
-								status = "Unavailable"
-								break;
-							case 3:
-								status = "In Use"
-								break;
-							case 4:
-								status = "Deployed"
-								break;
-						}
 						
 						$('#asset-info').append(`
 							<li class="list-group-item text-left">
@@ -108,8 +96,11 @@
 							<li class="list-group-item text-left">
 								<b>Asset Type: </b> ${data.type}
 							</li>
+							<li class="list-group-item text-left" style="text-transform: capitalize">
+								<b>Status: </b> ${data.status}
+							</li>
 							<li class="list-group-item text-left">
-								<b>Status: </b> ${status}
+								<b>Default Location:</b> ${data.def_location}
 							</li>
 							<li class="list-group-item text-left">
 								<b>Location:</b> ${data.location}
@@ -119,6 +110,9 @@
 							</li>
 							<li class="list-group-item text-left">
 								<b>Last Update:</b> ${data.last_updated}
+							</li>
+							<li class="list-group-item text-center">
+								<a href="{{ url_for('ui.ui_assets') }}#asset/${data.tracking_code}" class="btn btn-primary">Edit Asset</a>
 							</li>
 						`);
 					}

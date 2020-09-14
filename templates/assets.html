@@ -8,7 +8,13 @@
 			<div class="collapse navbar-collapse justify-content-end">
 				<div class="navbar-nav">
 					<a class="nav-item nav-link" href="{{ url_for('ui.ui_index') }}">Dashboard</a>
-					<a class="nav-item nav-link active" href="{{ url_for('ui.ui_assets') }}">Assets</a>
+					<div class="nav-item active dropdown">
+						<a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Assets</a>
+						<div class="dropdown-menu">
+							<a class="dropdown-item" href="{{ url_for('ui.ui_assets') }}">Assets</a>
+							<a class="dropdown-item" href="#">Add Asset</a>
+						</div>
+					</div>
 					<a class="nav-item nav-link" href="#">Users</a>
 					<span class="px-5"></span>
 					<div class="nav-item py-2 navbar-text">Logged in as <span class="font-weight-bold">{{ g.user.name }}</span></div>
@@ -27,6 +33,7 @@
 							<th scope="col">Tracking Code</th>
 							<th scope="col">Type</th>
 							<th scope="col">Status</th>
+							<th scope="col">Default Location</th>
 							<th scope="col">Location</th>
 							<th scope="col">Last Updated</th>
 							<th scope="col">Actions</th>
@@ -34,10 +41,11 @@
 					</thead>
 					<tbody>
 						{% for a in get_all_assets() %}
-							<tr>
+							<tr style="text-transform: capitalize;">
 								<td>#{{ a.id }}</td>
 								<td>{{ a.type }}</td>
 								<td>{{ a.status }}</td>
+								<td>{{ a.def_location }}</td>
 								<td>{{ a.location }}</td>
 								<td>{{ a.last_update }}</td>
 								<td>
@@ -86,11 +94,10 @@
 								<div class="input-group-text">Status</div>
 							</div>
 							<select class="custom-select">
-								<option value="0">Needs Repairs</option>
-								<option value="1">Available</option>
-								<option value="2">Unavailable</option>
-								<option value="3">In Use</option>
-								<option value="4">Deployed</option>
+								<option value="faulty">Faulty</option>
+								<option value="available">Available</option>
+								<option value="moved">Moved</option>
+								<option value="lost">Lost</option>
 							</select>
 						</div>
 					</div>
@@ -152,7 +159,7 @@
 		if (window.location.hash.substr(1).indexOf('asset/') == 0) {
 			setTimeout(function(){
 				var a = window.location.hash.substr(1).split('/')[1]
-				$('button[data-id="'+a+'"]').click()
+				$('button.btn-success[data-id="'+a+'"]').click()
 			}, 1000)
 		}
 
@@ -220,14 +227,13 @@
 				'id': btn.data('id'),
 				'type': btn.data('type'),
 				'status': btn.data('status'),
-				'status_num': ["Needs Repairs", "Available", "Unavailable", "In Use", "Deployed"].indexOf(btn.data('status')),
 				'location': btn.data('location'),
 				'note': btn.data('note')
 			}
 
 			var newAsset = {
 				'type': modal.find('input[x-id="type"]').val(),
-				'status_num': modal.find('select').val(),
+				'status': modal.find('select').val(),
 				'location': modal.find('input[x-id="location"]').val(),
 				'note': modal.find('textarea').text(),
 			}
@@ -240,9 +246,6 @@
 				var val = newAsset[key]
 				if (val != asset[key] && val != "") {
 					changed = true
-					if (key == "status_num") {
-						key = "status"
-					}
 					data[key] = val
 				}
 			}
@@ -311,7 +314,7 @@
 			"aaSorting": [],
 			columnDefs: [{
 				orderable: false,
-				targets: 5
+				targets: 6
 			}]
 		})
 		$('.dataTables_length').addClass('bs-select');
