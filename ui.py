@@ -4,6 +4,7 @@ from functools import wraps
 from datetime import datetime, timedelta
 from flask import Blueprint, abort, request, g, session, render_template, redirect, url_for
 
+from filter import entity_encode
 from db import db, User, Assets, AssetStatus
 
 #
@@ -32,10 +33,30 @@ ui = Blueprint('ui', __name__)
 #
 @ui.context_processor
 def utility_processor():
+	def escape(s):
+		return entity_encode(s)
+
 	def list_users_quick(limit=10):
 		if limit<=0:
 			limit = 1
 		return [dict(username=u.username, name=u.name) for u in User.query.filter_by(active=True).all()][:limit]
+	
+	def get_all_assets():
+		assets = []
+		for a in AssetStatus.query.all():
+			last_update = datetime.utcnow() - a.last_updated
+			if last_update.days == 0:
+				last_update = "Today"
+			elif last_update.days == 1:
+				last_update = "Yesterday"
+			elif last_update < 7:
+				last_update = f"{last_update.days} days ago"
+			else:
+				last_update = f"{last_update.weeks} weeks ago"
+			status = ['Needs Repairs', 'Available', 'Unavailable', 'In Use', 'Deployed'][a.status]
+			assets.append(dict(id=a.ass_id, type=a.asset.type, last_update=last_update, status=status, location=a.location, note=a.note))
+		return assets
+
 	def latest_updated_assets(days=3, limit=10):
 		date = datetime.utcnow() - timedelta(days=days)
 		assets = []
@@ -50,10 +71,10 @@ def utility_processor():
 			else:
 				last_update = f"{last_update.weeks} weeks ago"
 			status = ['Needs Repairs', 'Available', 'Unavailable', 'In Use', 'Deployed'][a.status]
-			assets.append(dict(id=a.ass_id, type=a.asset.type, last_update=last_update, status=status, location=a.location))
+			assets.append(dict(id=a.ass_id, type=a.asset.type, last_update=last_update, status=status, location=a.location, note=a.note))
 		return assets[:limit]
 
-	return dict(list_users_quick=list_users_quick, latest_updated_assets=latest_updated_assets)
+	return dict(list_users_quick=list_users_quick, get_all_assets=get_all_assets, latest_updated_assets=latest_updated_assets, escape=escape)
 
 #
 # UI Routes

@@ -2,7 +2,7 @@
 {% block title %}SIT223 Group 46{% endblock %}
 {% block content %}
 <div class="card">
-	<div class="card-block pb-3">
+	<div class="card-block pb-1">
 		<nav class="navbar navbar-expand navbar-light bg-light">
 			<span class="navbar-brand mb-0 h1">Asset Tracker</span>
 			<div class="collapse navbar-collapse justify-content-end">
@@ -18,7 +18,7 @@
 			</div> 
 		</nav>
 	</div>
-	<div class="card-block">
+	<div class="card-block pt-2">
 		<div class="row px-5">
 			<div class="col-12">
 				<table id="assetTable" class="table table-striped" width="100%">
@@ -33,27 +33,280 @@
 						</tr>
 					</thead>
 					<tbody>
-						{% for a in latest_updated_assets() %}
+						{% for a in get_all_assets() %}
 							<tr>
 								<td>#{{ a.id }}</td>
 								<td>{{ a.type }}</td>
 								<td>{{ a.status }}</td>
 								<td>{{ a.location }}</td>
 								<td>{{ a.last_update }}</td>
-								<td>Actions, to be added</td>
+								<td>
+									<button type="button" class="btn btn-success" data-toggle="modal" data-target="#editAsset" data-id="{{ a.id }}" data-type="{{ a.type }}" data-status="{{ a.status }}" data-location="{{ a.location }}" data-note="{{ a.note }}">Edit</button>
+									<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteAsset" data-id="{{ a.id }}">Delete</button>
+								</td>
 							</tr>
-					 	{% endfor %}
+						{% endfor %}
 					</tbody>
 				</table>
 			</div>
 		</div>
 	</div>
+	<div class="card-block">
+		<div class="row">
+			<div class="col-4 offset-4" id="alert"></div>
+		</div>
+	</div>
 	<div class="card-block py-3"></div>
 </div>
+<!-- Dialog Modals -->
+
+<div class="modal fade" id="editAsset" tabindex="-1" role="dialog" aria-labelledby="editAssetLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="editAssetLabel">Edit Asset</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<input type="hidden">
+			<div class="modal-body">
+				<div class="container-fluid">
+					<div class="row">
+						<div class="input-group mb-2">
+							<div class="input-group-prepend">
+								<div class="input-group-text">Type</div>
+							</div>
+							<input type="text" class="form-control" x-id="type">
+						</div>
+					</div>
+					<div class="row">
+						<div class="input-group mb-2">
+							<div class="input-group-prepend">
+								<div class="input-group-text">Status</div>
+							</div>
+							<select class="custom-select">
+								<option value="0">Needs Repairs</option>
+								<option value="1">Available</option>
+								<option value="2">Unavailable</option>
+								<option value="3">In Use</option>
+								<option value="4">Deployed</option>
+							</select>
+						</div>
+					</div>
+					<div class="row">
+						<div class="input-group mb-2">
+							<div class="input-group-prepend">
+								<div class="input-group-text">Location</div>
+							</div>
+							<input type="text" class="form-control" x-id="location">
+						</div>
+					</div>
+					<div class="row">
+						<div class="form-group col-12">
+							<label for="assetnote" class="mb-0">Asset Note</label>
+							<hr>
+							<textarea class="form-control" id="assetnote" rows="3" ></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary" id="assetEditBtn">Save changes</button>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- Delete an asset -->
+<div class="modal fade" id="deleteAsset" tabindex="-1" role="dialog" aria-labelledby="deleteAssetLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="deleteAssetLabel">Delete Asset</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<input type="hidden">
+			<div class="modal-body">
+				<p>Are you sure you want to delete asset <strong></strong></p>
+				<div class="form-check">
+					<input type="checkbox" class="form-check-input" id="confirmDeleteAsset">
+					<label class="form-check-label" for="confirmDeleteAsset">Check to confirm deletion</label>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-danger" id="assetDelBtn" disabled="">Delete</button>
+			</div>
+		</div>
+	</div>
+</div>
+
 {% endblock %}
 {% block scripts %}
 <script type="text/javascript">
 	$(document).ready(function() {
+
+		if (window.location.hash.substr(1).indexOf('asset/') == 0) {
+			setTimeout(function(){
+				var a = window.location.hash.substr(1).split('/')[1]
+				$('button[data-id="'+a+'"]').click()
+			}, 1000)
+		}
+
+		function createAlert(type, msg) {
+			var alrt = $.parseHTML(`<div class="alert alert-dismissible fade show" role="alert">
+					<p></p>
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>`)
+
+			$(alrt).find('p').text(msg)
+			
+			switch (type) {
+				case 'success':
+					$(alrt).addClass('alert-success')
+					break;
+				case 'warning':
+					$(alrt).addClass('alert-warning')
+					break;
+				case 'danger':
+					$(alrt).addClass('alert-danger')
+					break;
+			}
+			$('#alert').append(alrt)
+		}
+
+		// Edit Asset
+		$('#editAsset').on('show.bs.modal', function(event){
+			
+			var modal = $(this)
+			// Enable editing of the form again
+			modal.find('input').removeAttr('disabled')
+			modal.find('select').removeAttr('disabled')
+			modal.find('textarea').removeAttr('disabled')
+			modal.find('modal-footer > button').removeAttr('disabled')	
+			var btn = $(event.relatedTarget)
+			var asset = {
+				'id': btn.data('id'),
+				'type': btn.data('type'),
+				'status': btn.data('status'),
+				'status_num': ["Needs Repairs", "Available", "Unavailable", "In Use", "Deployed"].indexOf(btn.data('status')),
+				'location': btn.data('location'),
+				'note': btn.data('note')
+			}
+			modal.find('input[type="hidden"]').val(asset.id)
+			modal.find('.modal-title').text('Edit Asset #' + asset.id)
+			modal.find('input[x-id="type"]').attr('placeholder', asset.type)
+			modal.find('option[x-id="status"]').text(asset.status)
+			modal.find('option[value="'+asset.status_num+'"]').attr('selected', '')
+			modal.find('input[x-id="location"]').attr('placeholder', asset.location)
+			modal.find('textarea').text(asset.note)
+		})
+
+		$('#assetEditBtn').on('click', function(event) {
+			var modal = $('#editAsset')
+			// Disable the inputs
+			modal.find('input').attr('disabled', '')
+			modal.find('select').attr('disabled', '')
+			modal.find('textarea').attr('disabled', '')
+			modal.find('modal-footer > button').attr('disabled', '')
+			var assetid = modal.find('input[type="hidden"]').val()
+			var btn = $('button[data-id="'+assetid+'"]')
+			var asset = {
+				'id': btn.data('id'),
+				'type': btn.data('type'),
+				'status': btn.data('status'),
+				'status_num': ["Needs Repairs", "Available", "Unavailable", "In Use", "Deployed"].indexOf(btn.data('status')),
+				'location': btn.data('location'),
+				'note': btn.data('note')
+			}
+
+			var newAsset = {
+				'type': modal.find('input[x-id="type"]').val(),
+				'status_num': modal.find('select').val(),
+				'location': modal.find('input[x-id="location"]').val(),
+				'note': modal.find('textarea').text(),
+			}
+
+			var data = {'tracking_code': asset.id}
+			// Search for changes between the two assets data
+			var changed = false;
+			for (k in Object.keys(newAsset)) {
+				var key = Object.keys(newAsset)[k]
+				var val = newAsset[key]
+				if (val != asset[key] && val != "") {
+					changed = true
+					if (key == "status_num") {
+						key = "status"
+					}
+					data[key] = val
+				}
+			}
+		
+			// If the data has been changed lets make a request
+			if (changed) {
+				$.ajax({
+					type: 'POST',
+					url: '{{ url_for('api.asset_status_update') }}',
+					contentType: 'application/json',
+					dataType: 'JSON',
+					data: JSON.stringify(data),
+					success: function(res) {
+						createAlert('success', res.msg)
+					},
+					failure: function(res) {
+						createAlert('danger', res.msg)
+					}
+				})
+			}
+
+			modal.modal('hide')
+		})
+
+
+		// Delete an asset
+
+		$('#deleteAsset').on('show.bs.modal', function(event){
+			var modal = $(this)
+			var btn = $(event.relatedTarget)
+			var assetid = btn.data('id')
+			modal.find('.modal-title').text('Delete Asset #' + assetid)
+			modal.find('strong').text('#' + assetid)
+			modal.find('input[type="hidden"]').val(assetid)
+		})
+		$('#confirmDeleteAsset').change(function(e) {
+			if (this.checked) {
+				$('#assetDelBtn').removeAttr('disabled')
+			} else {
+				$('#assetDelBtn').attr('disabled','')
+			}
+		})
+		$('#assetDelBtn').on('click', function(e) {
+			var modal = $('#deleteAsset')
+			var assid = modal.find('input[type="hidden"]').val()
+			var data = {'tracking_code': assid}
+			// Send delete request to server
+			$.ajax({
+				type: 'POST',
+				url: '{{ url_for('api.delete_asset') }}',
+				contentType: 'application/json',
+				dataType: 'json',
+				data: JSON.stringify(data),
+				success: function(res) {
+					createAlert('success', res.msg)
+				},
+				failure: function(res) {
+					createAlert('data', res.msg)
+				}
+			})
+			modal.modal('hide')
+		})
+
+		// Data Table
 		$('#assetTable').DataTable({
 			"aaSorting": [],
 			columnDefs: [{

@@ -1,8 +1,10 @@
 #!/usr/bin/python3.7
 
+from datetime import datetime
 from flask import Blueprint, jsonify, abort, request, g, redirect, session, url_for
 from flask_httpauth import HTTPBasicAuth
 
+from filter import entity_encode
 from db import db, User, Assets, AssetStatus
 
 api = Blueprint('api', __name__)
@@ -110,7 +112,7 @@ def create_auth_token():
 @api.route('/test')
 @auth.login_required
 def protected():
-	return jsonify({'success': 1, 'msg': f"Authenticated as: {g.user.name}"})
+	return jsonify({'success': 1, 'msg': f"Authenticated as: {entity_encode(g.user.name)}"})
 
 
 ## Asset 
@@ -137,12 +139,12 @@ def get_asset():
 		if asset is None:
 			abort(404, 'Asset not found!')
 		results = {
-			"tracking_code": asset.tracking_code,
-			"type": asset.type,
+			"tracking_code": entity_encode(asset.tracking_code),
+			"type": entity_encode(asset.type),
 			"time_created": asset.time_created,
 			"status": asset.status[0].status,
-			"location": asset.status[0].location,
-			"note": asset.status[0].note,
+			"location": entity_encode(asset.status[0].location),
+			"note": entity_encode(asset.status[0].note),
 			"last_updated": asset.status[0].last_updated
 			}
 	except:
@@ -178,12 +180,12 @@ def search_assets():
 	results = []
 	for a in assets:
 		r = {
-			"tracking_code": a.tracking_code,
-			"type": a.type,
+			"tracking_code": entity_encode(a.tracking_code),
+			"type": entity_encode(a.type),
 			"time_created": a.time_created,
 			"status": a.status[0].status,
-			"location": a.status[0].location,
-			"note": a.status[0].note,
+			"location": entity_encode(a.status[0].location),
+			"note": entity_encode(a.status[0].note),
 			"last_updated": a.status[0].last_updated
 			}
 		results.append(r)
@@ -244,6 +246,7 @@ def delete_asset():
 	try:
 		Assets.query.filter_by(tracking_code = asset_code).delete()
 		AssetStatus.query.filter_by(ass_id = asset_code).delete()
+		db.session.commit()
 	except:
 		abort(500, 'An unknown error occured whilst trying to delte an asset!')
 	return jsonify({'success': 1, 'msg': f"Deleted Asset #{asset_code} from the database!"})
@@ -262,27 +265,33 @@ def delete_asset():
 def asset_status_update():
 	try:
 		asset_code = request.json.get('tracking_code')
+		asset_type = request.json.get('type')
 		status = request.json.get('status')
+		print(status)
 		note = request.json.get('note')
 		location = request.json.get('location')
 	except:
 		abort(400, 'Missing Arguments')
-	if asset_code is None or (status is None and note is None and location is None):
+	if asset_code is None or (asset_type is None and status is None and note is None and location is None):
 		abort(400, 'Missing Arguments')
 	asset_code = asset_code[1:] if asset_code[0] == '#' else asset_code
 	try:
 		assetstatus = AssetStatus.query.filter_by(ass_id = asset_code).first()
 		if assetstatus is None:
 			abort(404, "No Asset found!")
+		if asset_type:
+			assetstatus.asset.type = asset_type
 		if status:
-			assetstatus.status = status
+			assetstatus.status = int(status)
 		if note:
 			assetstatus.note = note
 		if location:
 			assetstatus.location = location
+		assetstatus.last_updated = datetime.utcnow()
 		# Add to db
-		db.session.add(assetstatus)
+		#db.session.add(assetstatus)
 		db.session.commit()
-	except:
-		abort(500, "An unknown error occured whilst trying to update the status of an asset!")
-	return jsonify({'success': 1, 'msg': f"Successfully updated the status of asset #{asset_code}"})
+	except Exception as e:
+		print(e)
+		abort(500, "An unknown error occured whilst trying to update an asset!")
+	return jsonify({'success': 1, 'msg': f"Successfully updated asset #{asset_code}"})
