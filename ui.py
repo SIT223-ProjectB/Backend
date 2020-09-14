@@ -49,7 +49,8 @@ def utility_processor():
 				last_update = f"{last_update.days} days ago"
 			else:
 				last_update = f"{last_update.weeks} weeks ago"
-			assets.append(dict(id=a.ass_id, type=a.asset.type, last_update=last_update))
+			status = ['Needs Repairs', 'Available', 'Unavailable', 'In Use', 'Deployed'][a.status]
+			assets.append(dict(id=a.ass_id, type=a.asset.type, last_update=last_update, status=status, location=a.location))
 		return assets[:limit]
 
 	return dict(list_users_quick=list_users_quick, latest_updated_assets=latest_updated_assets)
@@ -57,11 +58,16 @@ def utility_processor():
 #
 # UI Routes
 # 
+@ui.route('/login', methods=['GET'])
+def ui_login():
+	return render_template('login.html')
+
 @ui.route('/', methods=['GET'])
 @login_required
 def ui_index():
 	return render_template("index.html")
 
-@ui.route('/login', methods=['GET'])
-def ui_login():
-	return render_template('login.html')
+@ui.route('/assets', methods=['GET'])
+@login_required
+def ui_assets():
+	return render_template('assets.html')

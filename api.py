@@ -13,11 +13,11 @@ auth = HTTPBasicAuth()
 # 
 @auth.verify_password
 def _verify_password(username_or_tok, password):
+	user = None
 	# Try to verify based on session
 	uid = session.get('user')
-	if not uid:
-		return redirect(url_for('ui.ui_login'))
-	user = User.query.filter_by(id=int(uid), active=True).first()
+	if uid:
+		user = User.query.filter_by(id=int(uid), active=True).first()
 	if not user:
 		# Try to verify based on auth token
 		user = User.verify_auth_token(username_or_tok)

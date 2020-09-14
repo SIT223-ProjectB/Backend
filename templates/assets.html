@@ -1,0 +1,67 @@
+{% extends "main.html" %}
+{% block title %}SIT223 Group 46{% endblock %}
+{% block content %}
+<div class="card">
+	<div class="card-block pb-3">
+		<nav class="navbar navbar-expand navbar-light bg-light">
+			<span class="navbar-brand mb-0 h1">Asset Tracker</span>
+			<div class="collapse navbar-collapse justify-content-end">
+				<div class="navbar-nav">
+					<a class="nav-item nav-link" href="{{ url_for('ui.ui_index') }}">Dashboard</a>
+					<a class="nav-item nav-link active" href="{{ url_for('ui.ui_assets') }}">Assets</a>
+					<a class="nav-item nav-link" href="#">Users</a>
+					<span class="px-5"></span>
+					<div class="nav-item py-2 navbar-text">Logged in as <span class="font-weight-bold">{{ g.user.name }}</span></div>
+					<span class="px-3"></span>
+					<a class="nav-item btn btn-danger btn-sm py-2 text-white" href="{{ url_for('api.logout_user') }}">Logout</a>
+				</div>
+			</div> 
+		</nav>
+	</div>
+	<div class="card-block">
+		<div class="row px-5">
+			<div class="col-12">
+				<table id="assetTable" class="table table-striped" width="100%">
+					<thead>
+						<tr>
+							<th scope="col">Tracking Code</th>
+							<th scope="col">Type</th>
+							<th scope="col">Status</th>
+							<th scope="col">Location</th>
+							<th scope="col">Last Updated</th>
+							<th scope="col">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for a in latest_updated_assets() %}
+							<tr>
+								<td>#{{ a.id }}</td>
+								<td>{{ a.type }}</td>
+								<td>{{ a.status }}</td>
+								<td>{{ a.location }}</td>
+								<td>{{ a.last_update }}</td>
+								<td>Actions, to be added</td>
+							</tr>
+					 	{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div class="card-block py-3"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript">
+	$(document).ready(function() {
+		$('#assetTable').DataTable({
+			"aaSorting": [],
+			columnDefs: [{
+				orderable: false,
+				targets: 5
+			}]
+		})
+		$('.dataTables_length').addClass('bs-select');
+	})
+</script>
+{% endblock %}
