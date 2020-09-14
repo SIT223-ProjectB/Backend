@@ -12,7 +12,7 @@
 						<a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Assets</a>
 						<div class="dropdown-menu">
 							<a class="dropdown-item" href="{{ url_for('ui.ui_assets') }}">Assets</a>
-							<a class="dropdown-item" href="#">Add Asset</a>
+							<a class="dropdown-item" href="{{ url_for('ui.ui_assets') }}#add">Add Asset</a>
 						</div>
 					</div>
 					<a class="nav-item nav-link" href="#">Users</a>
@@ -67,7 +67,80 @@
 	<div class="card-block py-3"></div>
 </div>
 <!-- Dialog Modals -->
-
+<!-- Add an asset-->
+<div class="modal fade" id="addAsset" tabindex="-1" role="dialog" aria-labelledby="addAssetLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="addAssetLabel">Add Asset</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<div class="container-fluid">
+					<div class="row">
+						<div class="input-group mb-2">
+							<div class="input-group-prepend">
+								<div class="input-group-text">Asset ID</div>
+							</div>
+							<input type="text" class="form-control" x-add-id="id" placeholder="...">
+						</div>
+					</div>
+					<div class="row">
+						<div class="input-group mb-2">
+							<div class="input-group-prepend">
+								<div class="input-group-text">Type</div>
+							</div>
+							<input type="text" class="form-control" x-add-id="type" placeholder="...">
+						</div>
+					</div>
+					<div class="row">
+						<div class="input-group mb-2">
+							<div class="input-group-prepend">
+								<div class="input-group-text">Status</div>
+							</div>
+							<select class="custom-select" x-add-id="status">
+								<option value="faulty">Faulty</option>
+								<option value="available" selected="">Available</option>
+								<option value="moved">Moved</option>
+								<option value="lost">Lost</option>
+							</select>
+						</div>
+					</div>
+					<div class="row">
+						<div class="input-group mb-2">
+							<div class="input-group-prepend">
+								<div class="input-group-text">Default Location</div>
+							</div>
+							<input type="text" class="form-control" x-add-id="def_location" placeholder="...">
+						</div>
+					</div>
+					<div class="row">
+						<div class="input-group mb-2">
+							<div class="input-group-prepend">
+								<div class="input-group-text">Location</div>
+							</div>
+							<input type="text" class="form-control" x-add-id="location" placeholder="...">
+						</div>
+					</div>
+					<div class="row">
+						<div class="form-group col-12">
+							<label for="assetnote" class="mb-0">Asset Note</label>
+							<hr>
+							<textarea class="form-control" id="assetnote" x-add-id="note" rows="3" placeholder="A Note about the asset..."></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary" id="assetAddBtn">Add Asset</button>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- Edit an asset -->
 <div class="modal fade" id="editAsset" tabindex="-1" role="dialog" aria-labelledby="editAssetLabel" aria-hidden="true">
 	<div class="modal-dialog" role="document">
 		<div class="modal-content">
@@ -156,12 +229,22 @@
 <script type="text/javascript">
 	$(document).ready(function() {
 
-		if (window.location.hash.substr(1).indexOf('asset/') == 0) {
-			setTimeout(function(){
-				var a = window.location.hash.substr(1).split('/')[1]
-				$('button.btn-success[data-id="'+a+'"]').click()
-			}, 1000)
+		function checkHash() {
+			if (window.location.hash.substr(1).indexOf('asset/') == 0) {
+				setTimeout(function(){
+					var a = window.location.hash.substr(1).split('/')[1]
+					$('button.btn-success[data-id="'+a+'"]').click()
+				}, 1000)
+			}
+			if (window.location.hash.substr(1).indexOf('add') == 0) {
+				setTimeout(function(){
+					$('#addAsset').modal('show')
+				}, 250)
+			}
 		}
+
+		window.onhashchange = checkHash
+		checkHash()
 
 		function createAlert(type, msg) {
 			var alrt = $.parseHTML(`<div class="alert alert-dismissible fade show" role="alert">
@@ -186,6 +269,90 @@
 			}
 			$('#alert').append(alrt)
 		}
+
+		function reload(timeout=1500) {
+			setTimeout(function() {
+				window.location.reload()
+			}, timeout)
+		}
+
+		// Reset hash once modal is hidden
+		$('#addAsset').on('hide.bs.modal', function(event) {
+			window.location.hash = ''
+		})
+		$('#editAsset').on('hide.bs.modal', function(event) {
+			window.location.hash = ''
+		})
+		// Asset ID Validation
+		// /assets/check?id=..
+		$('input[x-add-id="id"]').on('change', function(e) {
+			var input = $(this)
+			var assid = input.val()
+			$.ajax({
+				type: 'GET',
+				url: '{{ url_for('api.check_asset') }}?id='+assid,
+				success: function(data) {
+					if (data.success == true) {
+						input.removeClass('is-invalid').addClass('is-valid')
+					} else {
+						input.removeClass('is-valid').addClass('is-invalid')
+					}
+				}
+			})
+		})
+		// Add an asset
+		$('#assetAddBtn').on('click', function(event) {
+			var modal = $('#addAsset')
+			var assetElems = {
+				'id': modal.find('input[x-add-id="id"]'),
+				'type': modal.find('input[x-add-id="type"]'),
+				'status': modal.find('select[x-add-id="status"]'),
+				'def_location': modal.find('input[x-add-id="def_location"]'),
+				'location': modal.find('input[x-add-id="location"]'),
+				'note': modal.find('textarea[x-add-id="note"]')
+			}
+			for (var i=0; i < Object.keys(assetElems).length; i++) {
+				var key = Object.keys(assetElems)[i]
+				var e = assetElems[key]
+				if (e.val() == "") {
+					e.removeClass('is-valid valid').addClass('is-invalid invalid')
+					e.focus()
+					return
+				} else {
+					e.removeClass('is-invalid invalid').addClass('is-valid valid')
+				}
+			}
+			data = {
+				'tracking_code': assetElems.id.val(),
+				'type': assetElems.type.val(),
+				'status': assetElems.status.val(),
+				'def_location': assetElems.def_location.val(),
+				'location': assetElems.location.val(),
+				'note': assetElems.note.val() 
+			}
+			
+			$.ajax({
+				type: 'POST',
+				url: '{{ url_for('api.add_asset') }}',
+				contentType: 'application/json',
+				dataType: 'json',
+				data: JSON.stringify(data),
+				success: function(data) {
+					if (data.success == 1) {
+						createAlert('success', 'Added Asset #' + assetElems.id.val() + ' To the database!')
+					} else {
+						createAlert('danger', 'Failed to add asset to the database!')
+					}
+				},
+				failure: function(data) {
+					createAlert('danger', 'Failed to add asset to the database!')
+				}
+			})
+			modal.modal('hide')
+			window.location.hash = ''
+			reload()
+		})
+
 
 		// Edit Asset
 		$('#editAsset').on('show.bs.modal', function(event){
@@ -268,6 +435,7 @@
 			}
 
 			modal.modal('hide')
+			reload()
 		})
 
 
@@ -307,6 +475,7 @@
 				}
 			})
 			modal.modal('hide')
+			reload()
 		})
 
 		// Data Table

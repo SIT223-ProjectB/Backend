@@ -209,11 +209,15 @@ def add_asset():
 		asset_type = request.json.get('type')
 		asset_code = request.json.get('tracking_code')
 		asset_note = request.json.get('note')
-		asset_def_location = request.get('def_location')
-		asset_location = request.get('location')
-	except:
+		asset_status = request.json.get('status')
+		asset_def_location = request.json.get('def_location')
+		asset_location = request.json.get('location')
+	except Exception as e:
+		print(e)
 		abort(400, "Missing Arguments")
-	if asset_type is None or asset_code is None or asset_note is None or asset_def_location is None or asset_location is None:
+	if asset_type is None or asset_code is None or asset_note is None or asset_status is None or asset_def_location is None or asset_location is None:
+		abort(400, "Missing Arguments")
+	if not (asset_status in ['faulty', 'available', 'moved', 'lost']):
 		abort(400, "Missing Arguments")
 	if Assets.query.filter_by(tracking_code = asset_code).first() is not None:
 		abort(400, "Asset Tracking Code in USE!")
@@ -221,7 +225,7 @@ def add_asset():
 	try:
 		# Create the asset
 		asset = Assets(type = asset_type, tracking_code = asset_code)
-		assetstatus = AssetStatus(ass_id = asset_code, note = asset_note, def_location = asset_def_location, location = asset_location)
+		assetstatus = AssetStatus(ass_id = asset_code, status = asset_status, note = asset_note, def_location = asset_def_location, location = asset_location)
 		# add to the db
 		db.session.add(asset)
 		db.session.add(assetstatus)
@@ -229,6 +233,22 @@ def add_asset():
 	except:
 		abort(500, "An unknown error occured whilst adding an asset to the database!")
 	return jsonify({'success': 1, 'msg': 'Asset added to the database!'})
+
+#
+# Checks for valid asset IDs
+#
+@api.route('/assets/check', methods=['GET'])
+@auth.login_required
+def check_asset():
+	try:
+		code = request.args.get('id')
+		if code is None:
+			return jsonify({'success': 0, 'msg': 'invalid'})
+		if Assets.query.filter_by(tracking_code = code).first() is not None:
+			return jsonify({'success': 0, 'msg': 'invalid'})
+	except:
+		abort(500, "An unknown error occured whilst querying the database!")
+	return jsonify({'success': 1, 'msg': 'valid'})
 
 # Delete an asset
 #
