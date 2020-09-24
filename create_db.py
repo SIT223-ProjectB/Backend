@@ -3,7 +3,11 @@
 from flask import Flask
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
-from passlib.apps import custom_app_context as pwd_context
+from passlib.apps import custom_app_context as pwd_context 
+from history_meta import (
+Versioned, 
+versioned_session
+)
 
 from config import current_config
 
@@ -36,12 +40,25 @@ class Assets(db.Model):
 class AssetStatus(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	ass_id = db.Column(db.String(20), db.ForeignKey('assets.tracking_code'), unique=True, nullable=False)
-	#status = db.Column(db.Integer, default=1)
 	status = db.Column(db.String(255), nullable=False)
 	note = db.Column(db.Text, nullable=False)
 	location = db.Column(db.String(255), nullable=False)
 	def_location = db.Column(db.String(255), nullable=False)
 	last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+# Asset Status Logs
+# Stores changes to items, empty by default, populated automatically upon an item being modified or deleted
+class AssetStatusLog(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	type = db.Column(db.String(50), nullable=False)
+	ass_id = db.Column(db.String(20), db.ForeignKey('assets.tracking_code'), nullable=False)
+	status = db.Column(db.String(255), nullable=False)
+	note = db.Column(db.Text, nullable=False)
+	location = db.Column(db.String(255), nullable=False)
+	def_location = db.Column(db.String(255), nullable=False)
+	#version = db.Column(db.Integer, default=0)
+	timestamp = db.Column(db.DateTime,default=datetime.utcnow, nullable=False)
 
 
 db.create_all()
@@ -65,13 +82,13 @@ for u in users:
 assets = [
 	{'type': 'Truck',     'tracking_code': "AA123", "status": "available", "note": "Awaiting deployment",                       "location": "VIC", "def_location": "SA"},
 	{'type': 'Container', 'tracking_code': "HS333", "status": "moved",     "note": "In transit to SA warehouse",                "location": "SA",  "def_location": "WA"},
-	{'type': 'Ship',      'tracking_code': "CA231", "status": "available", "note": "Idle, awaiting delivery",                   "location": "QLD", "def_location": "VIC"},
+	{'type': 'Ship',      'tracking_code': "CA231", "status": "available", "note": "Idle awaiting delivery",                   "location": "QLD", "def_location": "VIC"},
 	{'type': 'Forklift',  'tracking_code': "KL384", "status": "moved",     "note": "Replacing QLD forklift pending delivery",   "location": "NT",  "def_location": "QLD"},
-	{'type': 'Computer',  'tracking_code': "XE048", "status": "faulty",    "note": "Computer awaiting repairs, ticket #A338",   "location": "VIC", "def_location": "VIC"},
+	{'type': 'Computer',  'tracking_code': "XE048", "status": "faulty",    "note": "Computer awaiting repairs ticket #A338",   "location": "VIC", "def_location": "VIC"},
 	{'type': 'Documents', 'tracking_code': "HD084", "status": "lost",      "note": "Documents reported lost to management",     "location": "QLD", "def_location": "QLD"},
-	{'type': 'Car',       'tracking_code': "EF049", "status": "available", "note": "Idle, assignable to staff as needed",       "location": "VIC", "def_location": "NT"},
-	{'type': 'Truck',     'tracking_code': "BA124", "status": "faulty",    "note": "Awaiting new components, ticket #C322",     "location": "NT",  "def_location": "QLD"},
-	{'type': 'Truck',     'tracking_code': "CH421", "status": "moved",     "note": "In transit, transferred to NT warehouse",   "location": "NT",  "def_location": "QLD"},
+	{'type': 'Car',       'tracking_code': "EF049", "status": "available", "note": "Idle assignable to staff as needed",       "location": "VIC", "def_location": "NT"},
+	{'type': 'Truck',     'tracking_code': "BA124", "status": "faulty",    "note": "Awaiting new components ticket #C322",     "location": "NT",  "def_location": "QLD"},
+	{'type': 'Truck',     'tracking_code': "CH421", "status": "moved",     "note": "In transit transferred to NT warehouse",   "location": "NT",  "def_location": "QLD"},
 	{'type': 'Car',       'tracking_code': "TA323", "status": "available", "note": "To be assigned to new NT warehouse manager","location": "VIC", "def_location": "NT"},
 	{'type': 'Container', 'tracking_code': "MN129", "status": "available", "note": "Awaiting loading",                          "location": "WA",  "def_location": "WA"},
 	{'type': 'Computer',  'tracking_code': "GF903", "status": "available", "note": "Awaiting transfer to new NT warehouse",     "location": "VIC", "def_location": "NT"},
@@ -82,7 +99,7 @@ assets = [
 	{'type': 'Forklift',  'tracking_code': "PO480", "status": "lost",      "note": "Could be behind the curtains",              "location": "SA",  "def_location": "SA"},
 	{'type': 'Computer',  'tracking_code': "MS123", "status": "available", "note": "In use",                                    "location": "WA",  "def_location": "WA"},
 	{'type': 'Documents', 'tracking_code': "AH943", "status": "available", "note": "Archived",                                  "location": "WA",  "def_location": "WA"},
-	{'type': 'Forklift',  'tracking_code': "JK093", "status": "available", "note": "Idle, awaiting deployment",                 "location": "SA",  "def_location": "VIC"},
+	{'type': 'Forklift',  'tracking_code': "JK093", "status": "available", "note": "Idle awaiting deployment",                 "location": "SA",  "def_location": "VIC"},
 ]
 
 for a in assets:

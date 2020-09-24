@@ -1,0 +1,158 @@
+{% extends "main.html" %}
+{% block title %}SIT223 Group 46{% endblock %}
+{% block content %}
+<div class="card">
+	<div class="card-block pb-1">
+		<nav class="navbar navbar-expand navbar-light bg-light">
+			<span class="navbar-brand mb-0 h1">Asset Tracker</span>
+			<div class="collapse navbar-collapse justify-content-end">
+				<div class="navbar-nav">
+					<a class="nav-item nav-link" href="{{ url_for('ui.ui_index') }}">Dashboard</a>
+					<div class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Assets</a>
+						<div class="dropdown-menu">
+							<a class="dropdown-item" href="{{ url_for('ui.ui_assets') }}">Assets</a>
+							<a class="dropdown-item" href="{{ url_for('ui.ui_assets') }}#add">Add Asset</a>
+						</div>
+                    </div>
+                    <a class="nav-item nav-link active" href="{{ url_for('ui.ui_logs') }}">Asset Logs</a>
+					<a class="nav-item nav-link" href="{{ url_for('ui.ui_users') }}">Users</a>
+					<span class="px-5"></span>
+					<div class="nav-item py-2 navbar-text">Logged in as <span class="font-weight-bold">{{ g.user.name }}</span></div>
+					<span class="px-3"></span>
+					<a class="nav-item btn btn-danger btn-sm py-2 text-white" href="{{ url_for('api.logout_user') }}">Logout</a>
+				</div>
+			</div> 
+		</nav>
+	</div>
+	<div class="card-block pt-2">
+		<div class="row px-5">
+			<div class="col-12">
+				<table id="assetTable" class="table table-striped" width="100%">
+					<thead>
+						<tr>
+							<th scope="col">Tracking Code</th>
+							<th scope="col">Type</th>
+							<th scope="col">Status</th>
+							<th scope="col">Note</th>
+							<th scope="col">Default Location</th>
+                            <th scope="col">Location</th>
+                            <th scope="col">Timestamp</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for a in get_asset_log() %}
+							<tr style="text-transform: capitalize;">
+								<td>#{{ a.id }}</td>
+								<td>{{ a.type }}</td>
+								<td>{{ a.status }}</td>
+								<td>{{ a.note }}</td>
+								<td>{{ a.def_location }}</td>
+                                <td>{{ a.location }}</td>
+                                <td>{{ a.timestamp }}</td>
+								<td>{{ a.last_update }}</td>
+							</tr>
+						{% endfor %}
+						<button type = "button" onclick="exportTableToCSV('Assets.csv')" class="btn btn-primary" id="btn-spreadsheet">Export Selection to Spreadsheet</button>
+						<button type = "button" class="btn btn-primary" style="margin-left: 5px" id="btn-spreadsheet-all">Export All to Spreadsheet</button>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div class="card-block">
+		<div class="row">
+			<div class="col-4 offset-4" id="alert"></div>
+		</div>
+	</div>
+	<div class="card-block py-3"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript">
+	$(document).ready(function() {
+		function createAlert(type, msg) {
+			var alrt = $.parseHTML(`<div class="alert alert-dismissible fade show" role="alert">
+					<p></p>
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>`)
+
+			$(alrt).find('p').text(msg)
+			
+			switch (type) {
+				case 'success':
+					$(alrt).addClass('alert-success')
+					break;
+				case 'warning':
+					$(alrt).addClass('alert-warning')
+					break;
+				case 'danger':
+					$(alrt).addClass('alert-danger')
+					break;
+			}
+			$('#alert').append(alrt)
+		}
+
+		function reload(timeout=1500) {
+			setTimeout(function() {
+				window.location.reload()
+			}, timeout)
+		}
+
+		function downloadCSV(csv, filename) {
+			var csvFile;
+			var downloadLink;
+			csvFile = new Blob([csv], {type: "text/csv"});
+			downloadLink = document.createElement("a");
+			downloadLink.download = filename;
+			downloadLink.href = window.URL.createObjectURL(csvFile);
+			// Hide download link
+			downloadLink.style.display = "none";
+			// Add the link to DOM
+			document.body.appendChild(downloadLink);
+			// Click download link
+			downloadLink.click();
+		}
+		//used to read current selection of logs and create a csv file
+		function exportTableToCSV(filename) {
+			var csv = [];
+			var rows = document.querySelectorAll("#assetTable");
+			for (var i = 0; i < rows.length; i++) {
+				var row = [], cols = rows[i].querySelectorAll("td, th");
+				for (var j = 0; j < cols.length; j++)
+				{
+					//line break at end of each col
+					if(j % 8 == 0){
+						row.push("\n");
+					}
+					row.push(cols[j].innerText);
+				}
+				csv.push(row.join(","));
+			}
+			downloadCSV(csv.join("\n"), filename);
+			createAlert('success', 'Downloaded Selected Assets!')
+		}
+		
+		$('#btn-spreadsheet-all').on('click', function(e){
+			createAlert('success', 'Downloaded All Assets!')
+			window.open('{{url_for('ui.download')}}?file=logs', '_blank')
+		})
+
+		// Data Table
+		$('#assetTable').DataTable({
+			"aaSorting": [],
+			columnDefs: [{
+				orderable: false,
+				targets: 6
+			}]
+		})
+		$('.dataTables_length').addClass('bs-select');
+
+
+	})
+
+
+</script>
+{% endblock %}

@@ -2,10 +2,10 @@
 
 from functools import wraps
 from datetime import datetime, timedelta
-from flask import Blueprint, abort, request, g, session, render_template, redirect, url_for
-
+from flask import Blueprint, abort, request, g, session, render_template, redirect, url_for, send_file
+import csv
 from filter import entity_encode
-from db import db, User, Assets, AssetStatus
+from db import db, User, Assets, AssetStatus, AssetStatusLog
 
 #
 # User Verification for UI
@@ -40,6 +40,9 @@ def utility_processor():
 		if limit<=0:
 			limit = 1
 		return [dict(username=u.username, name=u.name) for u in User.query.filter_by(active=True).all()][:limit]
+
+	def list_users():
+		return [dict(id=u.id, username=u.username, name=u.name, active=bool(u.active)) for u in User.query.all()]
 	
 	def get_all_assets():
 		assets = []
@@ -55,6 +58,12 @@ def utility_processor():
 				last_update = f"{last_update.weeks} weeks ago"
 			assets.append(dict(id=a.ass_id, type=a.asset.type, last_update=last_update, status=a.status, def_location=a.def_location, location=a.location, note=a.note))
 		return assets
+	#gets all assets logs to display on logs.html
+	def get_asset_log():
+		log = []
+		for a in AssetStatusLog.query.all():
+			log.append(dict(id=a.ass_id, type=a.type, timestamp=a.timestamp, status=a.status, def_location=a.def_location, location=a.location, note=a.note))
+		return log
 
 	def latest_updated_assets(days=3, limit=10):
 		date = datetime.utcnow() - timedelta(days=days)
@@ -72,7 +81,7 @@ def utility_processor():
 			assets.append(dict(id=a.ass_id, type=a.asset.type, last_update=last_update, status=a.status, def_location=a.def_location, location=a.location, note=a.note))
 		return assets[:limit]
 
-	return dict(list_users_quick=list_users_quick, get_all_assets=get_all_assets, latest_updated_assets=latest_updated_assets, escape=escape)
+	return dict(list_users_quick=list_users_quick, list_users=list_users, get_all_assets=get_all_assets, latest_updated_assets=latest_updated_assets, escape=escape, get_asset_log=get_asset_log)
 
 #
 # UI Routes
@@ -80,6 +89,10 @@ def utility_processor():
 @ui.route('/login', methods=['GET'])
 def ui_login():
 	return render_template('login.html')
+
+@ui.route('/register', methods=['GET'])
+def ui_register():
+	return render_template('register.html')
 
 @ui.route('/', methods=['GET'])
 @login_required
@@ -90,3 +103,53 @@ def ui_index():
 @login_required
 def ui_assets():
 	return render_template('assets.html')
+
+@ui.route('/logs', methods=['GET'])
+@login_required
+def ui_logs():
+	return render_template('logs.html')
+
+@ui.route('/users', methods=['GET'])
+@login_required
+def ui_users():
+	return render_template('users.html')
+
+@ui.route('/download', methods=['GET'])
+@login_required
+def download():
+	def generate_logs():
+		with open('downloads/logs.csv', 'w') as file:
+			out = csv.writer(file)
+			out.writerow(['Asset ID', 'Type', 'Status', 'Note','Location', 'Default Location', 'TimeStamp'])
+			for a in db.session.query(AssetStatusLog).all():
+				out.writerow([a.ass_id, a.type, a.status, a.note, a.location, a.def_location, a.timestamp])
+		return True
+
+	def generate_assets():
+		with open('downloads/assets.csv', 'w') as file:
+			out = csv.writer(file)
+			out.writerow(['Asset ID', 'Type', 'Status', 'Note','Location', 'Default Location', 'Last_Updated'])
+			for a in db.session.query(AssetStatus).all():
+				out.writerow([a.ass_id, a.asset.type, a.status, a.note, a.location, a.def_location, a.last_updated])
+		return True
+
+	file = request.args.get('file')
+	if not file:
+		abort(404, 'Not found')
+
+	try:
+		file = str(file).lower()
+		# Generate and send the logs file
+		if file == "logs":
+			generate_logs()
+			return send_file('downloads/logs.csv', as_attachment=True, attachment_filename='All_Logs.csv')
+		# Generate and send the assets file
+		if file == "assets":
+			generate_assets()
+			return send_file('downloads/assets.csv', as_attachment=True, attachment_filename='All_Assets.csv')
+	except:
+		pass
+	# No file found
+	abort(404, "Not Found")
+
+

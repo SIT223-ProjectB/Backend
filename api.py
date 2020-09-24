@@ -5,7 +5,7 @@ from flask import Blueprint, jsonify, abort, request, g, redirect, session, url_
 from flask_httpauth import HTTPBasicAuth
 
 from filter import entity_encode
-from db import db, User, Assets, AssetStatus
+from db import db, User, Assets, AssetStatus, AssetStatusLog
 
 api = Blueprint('api', __name__)
 auth = HTTPBasicAuth()
@@ -69,7 +69,7 @@ def logout_user():
 # {"username": "jnunn", "password": "password", "name": "Jeremy N"}
 #
 ##
-@api.route('/users/create', methods=['POST'])
+@api.route('/users/create_new_user', methods=['POST'])
 def create_new_user():
 	try:
 		username = request.json.get('username')
@@ -89,6 +89,83 @@ def create_new_user():
 	db.session.commit()
 	return jsonify({'username': user.username})
 
+#
+# Checks for valid usernames
+#
+@api.route('/users/check', methods=['GET'])
+@auth.login_required
+def check_user():
+	try:
+		username = request.args.get('username')
+		if username is None:
+			return jsonify({'success': 0, 'msg': 'invalid'})
+		if User.query.filter_by(username = username).first() is not None:
+			return jsonify({'success': 0, 'msg': 'invalid'})
+	except:
+		abort(500, "An unknown error occured whilst querying the database!")
+	return jsonify({'success': 1, 'msg': 'valid'})
+
+# Update User
+#  You can update all the attributes of a user at once or you can just do it one by one
+#
+# POST /api/users/update
+# Content-Type: application/json
+#
+# {"id": 1, "username": "jnunn", "name": "Jeremy N", "active": false}
+#
+###
+@api.route('/users/update', methods=["POST"])
+@auth.login_required
+def users_update():
+	try:
+		id = request.json.get('id')
+		username = request.json.get('username')
+		name = request.json.get('name')
+		active = request.json.get('active')
+	except:
+		abort(400, 'Missing Arguments')
+	if id is None or (username is None and name is None and active is None):
+		abort(400, 'Missing Arguments')
+	try:
+		u = User.query.filter_by(id = id).first()
+		if u is None:
+			abort(404, "No User Found!")
+		if username:
+			u.username = username
+		if name:
+			u.name = name
+		if active in (True, False):
+			u.active = active
+
+		# Add to db
+		db.session.commit()
+	except Exception as e:
+		print(e)
+		abort(500, "An unknown error occured whilst trying to update a user!")
+	return jsonify({'success': 1, 'msg': f"Successfully updated user {u.username}"})
+
+# Delete a User
+#
+# POST /api/users/delete
+# Content-Type: application/json
+# 
+# {"id": 1}
+#
+@api.route('/users/delete', methods=["POST"])
+@auth.login_required
+def delete_user():
+	try:
+		user_id = request.json.get('id')
+	except:
+		abort(400, 'Missing Arguments')
+	if user_id is None:
+		abort(400, 'Missing Arguments')
+	try:
+		User.query.filter_by(id = user_id).delete()
+		db.session.commit()
+	except:
+		abort(500, 'An unknown error occured whilst trying to delte a User!')
+	return jsonify({'success': 1, 'msg': f"Deleted user #{user_id} from the database!"})
 
 # Create authentication token
 #
@@ -268,6 +345,9 @@ def delete_asset():
 		abort(400, 'Missing Arguments')
 	asset_code = asset_code[1:] if asset_code[0] == '#' else asset_code
 	try:
+		assetstatus = AssetStatus.query.filter_by(ass_id = asset_code).first()
+		# stores the retrieved assets state in AssetStatusLog table before deleting it
+		save_deleted_asset(assetstatus.asset.type, assetstatus.ass_id, assetstatus.status, assetstatus.note, assetstatus.location, assetstatus.def_location)
 		Assets.query.filter_by(tracking_code = asset_code).delete()
 		AssetStatus.query.filter_by(ass_id = asset_code).delete()
 		db.session.commit()
@@ -291,7 +371,6 @@ def asset_status_update():
 		asset_code = request.json.get('tracking_code')
 		asset_type = request.json.get('type')
 		status = request.json.get('status')
-		print(status)
 		note = request.json.get('note')
 		def_location = request.json.get('def_location')
 		location = request.json.get('location')
@@ -302,6 +381,8 @@ def asset_status_update():
 	asset_code = asset_code[1:] if asset_code[0] == '#' else asset_code
 	try:
 		assetstatus = AssetStatus.query.filter_by(ass_id = asset_code).first()
+		# stores the retrieved assets state in AssetStatusLog table pre-modifying
+		save_asset_history(assetstatus.asset.type, assetstatus.ass_id, assetstatus.status, assetstatus.note, assetstatus.location, assetstatus.def_location)
 		if assetstatus is None:
 			abort(404, "No Asset found!")
 		if asset_type:
@@ -314,7 +395,7 @@ def asset_status_update():
 			assetstatus.def_location = def_location
 		if location:
 			assetstatus.location = location
-		assetstatus.last_updated = datetime.utcnow()
+
 		# Add to db
 		#db.session.add(assetstatus)
 		db.session.commit()
@@ -322,3 +403,16 @@ def asset_status_update():
 		print(e)
 		abort(500, "An unknown error occured whilst trying to update an asset!")
 	return jsonify({'success': 1, 'msg': f"Successfully updated asset #{asset_code}"})
+
+# used to enter the modified assets state pre-modification in the AssetStatusLog table
+def save_asset_history(ass_type, ass_id, status, note, location, def_location):
+	assetstatuslog = AssetStatusLog(type=ass_type, ass_id=ass_id, status=status, note=note, location=location, def_location=def_location) #version=0) #timestamp=currenttime)
+	db.session.add(assetstatuslog)
+	db.session.commit()
+# used to enter the deleted assets state pre-deletion in the AssetStatusLog table
+# appends a DELETED note
+def save_deleted_asset(ass_type, ass_id, status, note, location, def_location):
+	del_note = " DELETED"
+	assetstatuslog = AssetStatusLog(type=ass_type + del_note, ass_id=ass_id, status=status, note=note + del_note, location=location, def_location=def_location) #version=0) #timestamp=currenttime)
+	db.session.add(assetstatuslog)
+	db.session.commit()

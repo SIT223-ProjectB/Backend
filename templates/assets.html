@@ -15,7 +15,8 @@
 							<a class="dropdown-item" href="{{ url_for('ui.ui_assets') }}#add">Add Asset</a>
 						</div>
 					</div>
-					<a class="nav-item nav-link" href="#">Users</a>
+					<a class="nav-item nav-link" href="{{ url_for('ui.ui_logs') }}">Asset Logs</a>
+					<a class="nav-item nav-link" href="{{ url_for('ui.ui_users') }}">Users</a>
 					<span class="px-5"></span>
 					<div class="nav-item py-2 navbar-text">Logged in as <span class="font-weight-bold">{{ g.user.name }}</span></div>
 					<span class="px-3"></span>
@@ -33,6 +34,7 @@
 							<th scope="col">Tracking Code</th>
 							<th scope="col">Type</th>
 							<th scope="col">Status</th>
+							<th scope="col">Note</th>
 							<th scope="col">Default Location</th>
 							<th scope="col">Location</th>
 							<th scope="col">Last Updated</th>
@@ -45,6 +47,7 @@
 								<td>#{{ a.id }}</td>
 								<td>{{ a.type }}</td>
 								<td>{{ a.status }}</td>
+								<td>{{ a.note }}</td>
 								<td>{{ a.def_location }}</td>
 								<td>{{ a.location }}</td>
 								<td>{{ a.last_update }}</td>
@@ -54,6 +57,8 @@
 								</td>
 							</tr>
 						{% endfor %}
+						<button type="button" onclick="exportTableToCSV('Assets.csv')" class="btn btn-primary " id="btn-spreadsheet">Export Selection to Spreadsheet</button>
+						<button type="button" class="btn btn-primary " style="margin-left: 5px" id="btn-spreadsheet-all">Export All to Spreadsheet</button>
 					</tbody>
 				</table>
 			</div>
@@ -483,10 +488,54 @@
 			"aaSorting": [],
 			columnDefs: [{
 				orderable: false,
-				targets: 6
+				targets: 7
 			}]
 		})
 		$('.dataTables_length').addClass('bs-select');
 	})
-</script>
+	//automatically downloads a csv file
+	function downloadCSV(csv, filename) {
+
+		var csvFile;
+		var downloadLink;
+		csvFile = new Blob([csv], {type: "text/csv"});
+
+		downloadLink = document.createElement("a");
+
+		downloadLink.download = filename;
+
+		downloadLink.href = window.URL.createObjectURL(csvFile);
+
+		// Hide download link
+		downloadLink.style.display = "none";
+
+		// Add the link to DOM
+		document.body.appendChild(downloadLink);
+
+		// Click download link
+		downloadLink.click();
+	}
+	//used to read current selection of assets and create a csv file
+	function exportTableToCSV(filename) {
+		var csv = [];
+		var rows = document.querySelectorAll("#assetTable");
+		for (var i = 0; i < rows.length; i++) {
+			var row = [], cols = rows[i].querySelectorAll("td, th");
+			for (var j = 0; j < cols.length; j++)
+			{
+				//line break at end of each col
+				if(j % 8 == 0){
+					row.push("\n");
+				}
+				row.push(cols[j].innerText);
+			}
+			csv.push(row.join(","));
+		}
+		downloadCSV(csv.join("\n"), filename);
+	}
+
+	$('#btn-spreadsheet-all').on('click', function(e){
+			window.open('{{url_for('ui.download')}}?file=assets', '_blank')
+		})
+	</script>	
 {% endblock %}

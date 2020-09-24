@@ -1,0 +1,338 @@
+{% extends "main.html" %}
+{% block title %}SIT223 Group 46{% endblock %}
+{% block content %}
+<div class="card">
+	<div class="card-block pb-1">
+		<nav class="navbar navbar-expand navbar-light bg-light">
+			<span class="navbar-brand mb-0 h1">Asset Tracker</span>
+			<div class="collapse navbar-collapse justify-content-end">
+				<div class="navbar-nav">
+					<a class="nav-item nav-link" href="{{ url_for('ui.ui_index') }}">Dashboard</a>
+					<div class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Assets</a>
+						<div class="dropdown-menu">
+							<a class="dropdown-item" href="{{ url_for('ui.ui_assets') }}">Assets</a>
+							<a class="dropdown-item" href="{{ url_for('ui.ui_assets') }}#add">Add Asset</a>
+						</div>
+                    </div>
+                    <a class="nav-item nav-link" href="{{ url_for('ui.ui_logs') }}">Asset Logs</a>
+					<a class="nav-item nav-link active" href="{{ url_for('ui.ui_users') }}">Users</a>
+					<span class="px-5"></span>
+					<div class="nav-item py-2 navbar-text">Logged in as <span class="font-weight-bold">{{ g.user.name }}</span></div>
+					<span class="px-3"></span>
+					<a class="nav-item btn btn-danger btn-sm py-2 text-white" href="{{ url_for('api.logout_user') }}">Logout</a>
+				</div>
+			</div> 
+		</nav>
+	</div>
+	<div class="card-block pt-2">
+		<div class="row px-5">
+			<div class="col-12">
+				<table id="usersTable" class="table table-striped" width="100%">
+					<thead>
+						<tr>
+							<th scope="col">Username</th>
+							<th scope="col">Name</th>
+							<th scope="col">Active</th>
+							<th scope="col">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for u in list_users() %}
+							<tr style="text-transform: capitalize;">
+								<td>{{ u.username }}</td>
+								<td>{{ u.name }}</td>
+								<td>{{ u.active }}</td>
+								<td>
+									<button type="button" class="btn btn-success" data-toggle="modal" data-target="#editUser" data-id="{{ u.id }}" data-username="{{ u.username }}" data-name="{{ u.name }}" data-active="{{ u.active }}">Edit</button>
+									<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteUser" data-id="{{ u.id }}" data-username="{{ u.username }}">Delete</button>
+								</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div class="card-block">
+		<div class="row">
+			<div class="col-4 offset-4" id="alert"></div>
+		</div>
+	</div>
+	<div class="card-block py-3"></div>
+</div>
+<!-- Dialog Modals -->
+<!-- Edit a User -->
+<div class="modal fade" id="editUser" tabindex="-1" role="dialog" aria-labelledby="editUserLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="editUserLabel">Edit User</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<input type="hidden" x-id="id">
+			<div class="modal-body">
+				<div class="container-fluid">
+					<div class="row">
+						<div class="input-group mb-2">
+							<div class="input-group-prepend">
+								<div class="input-group-text">Username</div>
+							</div>
+							<input type="text" class="form-control" x-id="username">
+						</div>
+					</div>
+					<div class="row">
+						<div class="input-group mb-2">
+							<div class="input-group-prepend">
+								<div class="input-group-text">Name</div>
+							</div>
+							<input type="text" class="form-control" x-id="name">
+						</div>
+					</div>
+					<div class="row">
+						<div class="form-group col-12">
+							<div class="form-check">
+								<input type="checkbox" class="form-check-input" id="activeUser" x-id="active">
+								<label class="form-check-label" for="activeUser">Active?</label>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary" id="userEditBtn">Save changes</button>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- Delete a User -->
+<div class="modal fade" id="deleteUser" tabindex="-1" role="dialog" aria-labelledby="deleteUserLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="deleteUserLabel">Delete User</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<input type="hidden" x-id="id">
+			<div class="modal-body">
+				<p>Are you sure you want to delete the user <strong></strong></p>
+				<div class="form-check">
+					<input type="checkbox" class="form-check-input" id="confirmDeleteUser">
+					<label class="form-check-label" for="confirmDeleteUser">Check to confirm deletion</label>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-danger" id="userDelBtn" disabled="">Delete</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript">
+	$(document).ready(function() {
+
+		function checkHash() {
+			if (window.location.hash.substr(1).indexOf('user/') == 0) {
+				setTimeout(function(){
+					var a = window.location.hash.substr(1).split('/')[1]
+					$('button.btn-success[data-id="'+a+'"]').click()
+				}, 1000)
+			}
+		}
+
+		window.onhashchange = checkHash
+		checkHash()
+
+		function createAlert(type, msg) {
+			var alrt = $.parseHTML(`<div class="alert alert-dismissible fade show" role="alert">
+					<p></p>
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>`)
+
+			$(alrt).find('p').text(msg)
+			
+			switch (type) {
+				case 'success':
+					$(alrt).addClass('alert-success')
+					break;
+				case 'warning':
+					$(alrt).addClass('alert-warning')
+					break;
+				case 'danger':
+					$(alrt).addClass('alert-danger')
+					break;
+			}
+			$('#alert').append(alrt)
+		}
+
+		function reload(timeout=1500) {
+			setTimeout(function() {
+				window.location.reload()
+			}, timeout)
+		}
+
+		// Reset hash once modal is hidden
+		$('#editUser').on('hide.bs.modal', function(event) {
+			window.location.hash = ''
+		})
+		// Username Validation
+		// /users/check?username=..
+		$('input[x-id="username"]').on('change', function(e) {
+			var input = $(this)
+			var username = input.val()
+			$.ajax({
+				type: 'GET',
+				url: '{{ url_for('api.check_user') }}?username='+username,
+				success: function(data) {
+					if (data.success == true) {
+						input.removeClass('is-invalid').addClass('is-valid')
+					} else {
+						input.removeClass('is-valid').addClass('is-invalid')
+					}
+				}
+			})
+		})
+		// Edit User
+		$('#editUser').on('show.bs.modal', function(event){
+			var modal = $(this)
+			// Enable editing of the form again
+			modal.find('input').removeAttr('disabled')
+			modal.find('modal-footer > button').removeAttr('disabled')	
+			var btn = $(event.relatedTarget)
+			var user = {
+				'id': btn.data('id'),
+				'username': btn.data('username'),
+				'name': btn.data('name'),
+				'active': btn.data('active')
+			}
+			modal.find('input[x-id="id"]').val(user.id)
+			modal.find('.modal-title').text('Edit User - ' + user.username)
+			modal.find('input[x-id="username"]').attr('placeholder', user.username)
+			modal.find('input[x-id="name"]').attr('placeholder', user.name)
+			if (user.active.indexOf("True") == 0) { 
+				modal.find('input[x-id="active"]').attr('checked', 'checked') 
+			} else {  
+				modal.find('input[x-id="active"]').removeAttr('checked') 
+			}
+		})
+
+
+
+		$('#userEditBtn').on('click', function(event) {
+			var modal = $('#editUser')
+			// Disable the inputs
+			modal.find('input').attr('disabled', '')
+			modal.find('modal-footer > button').attr('disabled', '')
+			var userid = modal.find('input[x-id="id"]').val()
+			var btn = $('button[data-id="'+userid+'"]')
+			var user = {
+				'id': btn.data('id'),
+				'username': btn.data('username'),
+				'name': btn.data('name'),
+				'active': true ? btn.data('active').indexOf('True') == 0 : false 
+			}
+
+			var newUser = {
+				'username': modal.find('input[x-id="username"]').val(),
+				'name': modal.find('input[x-id="name"]').val(),
+				'active': modal.find('input[x-id="active"]')[0].checked,
+			}
+
+			var data = {'id': btn.data('id')}
+			// Search for changes between the two users data
+			var changed = false;
+			for (k in Object.keys(newUser)) {
+				var key = Object.keys(newUser)[k]
+				var val = newUser[key]
+				if (val != user[key] && val !== "") {
+					changed = true
+					data[key] = val
+				}
+			}
+
+			// If the data has been changed lets make a request
+			if (changed) {
+				$.ajax({
+					type: 'POST',
+					url: '{{ url_for('api.users_update') }}',
+					contentType: 'application/json',
+					dataType: 'JSON',
+					data: JSON.stringify(data),
+					success: function(res) {
+						createAlert('success', res.msg)
+					},
+					failure: function(res) {
+						createAlert('danger', res.msg)
+					}
+				})
+			}
+
+			modal.modal('hide')
+			reload()
+		})
+
+
+		// Delete A User
+
+		$('#deleteUser').on('show.bs.modal', function(event){
+			var modal = $(this)
+			var btn = $(event.relatedTarget)
+			var userid = btn.data('id')
+			var username = btn.data('username')
+			modal.find('.modal-title').text('Delete user ' + username)
+			modal.find('strong').text(username)
+			modal.find('input[x-id="id"]').val(userid)
+		})
+		$('#confirmDeleteUser').change(function(e) {
+			if (this.checked) {
+				$('#userDelBtn').removeAttr('disabled')
+			} else {
+				$('#userDelBtn').attr('disabled','')
+			}
+		})
+		$('#userDelBtn').on('click', function(e) {
+			var modal = $('#deleteUser')
+			var userid = modal.find('input[x-id="id"]').val()
+			var data = {'id': userid}
+			console.log(data)
+			// Send delete request to server
+			$.ajax({
+				type: 'POST',
+				url: '{{ url_for('api.delete_user') }}',
+				contentType: 'application/json',
+				dataType: 'json',
+				data: JSON.stringify(data),
+				success: function(res) {
+					createAlert('success', res.msg)
+				},
+				failure: function(res) {
+					createAlert('data', res.msg)
+				}
+			})
+			modal.modal('hide')
+			reload()
+		})
+
+		// Data Table
+		$('#usersTable').DataTable({
+			"aaSorting": [],
+			columnDefs: [{
+				orderable: false,
+				targets: 6
+			}]
+		})
+		$('.dataTables_length').addClass('bs-select');
+	})
+
+</script>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "main.html" %}
+{% block title %}SIT223 Group 46{% endblock %}
+{% block content %}
+<div class="card">
+	<div class="card-block py-3"></div>
+	<div class="card-block text-center">
+		<h2 class="py-2">Register New User</h2>
+	</div>
+	<div class="card-block col-2 offset-5 text-center">
+		<div class="alert alert-danger" id="failure" style="display: none">
+			Registration Failed!
+		</div>
+	</div>
+	<div class="card-block align-center col-2 offset-5">
+		<form id="register" autocomplete="off">
+			<div class="form-group">
+				<label class="sr-only" for="username">Username</label>
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<div class="input-group-text">
+							<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-person-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+								<path fill-rule="evenodd" d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+							</svg>
+						</div>
+					</div>
+					<input type="text" class="form-control" id="username" placeholder="Username">
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="sr-only" for="username">First Name Last Initial</label>
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<div class="input-group-text">
+							<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-person-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+								<path fill-rule="evenodd" d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+							</svg>
+						</div>
+					</div>
+					<input type="text" class="form-control" id="name" placeholder="First Name Last Initial">
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="sr-only" for="username">Password</label>
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<div class="input-group-text">
+							<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-key-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+								<path fill-rule="evenodd" d="M3.5 11.5a3.5 3.5 0 1 1 3.163-5H14L15.5 8 14 9.5l-1-1-1 1-1-1-1 1-1-1-1 1H6.663a3.5 3.5 0 0 1-3.163 2zM2.5 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+							</svg>
+						</div>
+					</div>
+					<input type="password" class="form-control" id="password" placeholder="Password">
+				</div>
+			<div class="form-group pt-3">
+				<label class="sr-only" for="username">Password</label>
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<div class="input-group-text">
+							<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-key-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+								<path fill-rule="evenodd" d="M3.5 11.5a3.5 3.5 0 1 1 3.163-5H14L15.5 8 14 9.5l-1-1-1 1-1-1-1 1-1-1-1 1H6.663a3.5 3.5 0 0 1-3.163 2zM2.5 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+							</svg>
+						</div>
+					</div>
+					<input type="password" class=" form-control" id="password-confirm" placeholder="Confirm Password">
+		</div>
+			<div class="form-group pt-3">
+				<button type="submit" class="btn btn-success col-12" id="reg-btn">
+					Register
+				</button>
+			</div>
+			<a class="nav-item nav-link col-12 d-flex justify-content-center" href="/login">
+				Login
+			</a>
+		</form>
+	</div>
+	<div class="card-block py-3"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript">
+	$(document).ready(function() {
+		$('#register').on('submit', function(e){
+			e.preventDefault()
+			// Disable the inputs
+			$('form input').prop('disabled', true)
+			$('form button[type="submit"]').prop('disabled', true)
+			// Get the user / pass
+			var user = $('#username').val()
+			var pass = $('#password').val()
+			var name = $('#name').val()
+
+			var passconfirm = $('#password-confirm').val()
+			if(passconfirm == pass){
+				$.ajax({
+					type: "POST",
+					url: '{{ url_for('api.create_new_user') }}',
+					contentType: "application/json",
+					dataType: 'json',
+					data: JSON.stringify({"username": user, "password": pass, "name": name}),
+					statusCode: {
+						200: function() {
+							setTimeout(function() {
+								window.location = "{{ url_for('ui.ui_login') }}"
+							}, 1000);
+						},
+						400: function() {
+							$('form input').val('')
+							$('form input').prop('disabled', false)
+							$('form button[type="submit"]').prop('disabled', false)
+							$('#failure').css('display', 'inherit')
+						}
+					}
+				})
+			}else{
+				//returns Registration failure notif if passwords don't match
+				$('form button[type="submit"]').prop('disabled', false)
+				$('#failure').css('display', 'inherit')
+				$('form input').val('')
+				$('form input').prop('disabled', false)
+			}
+
+		})
+	})
+
+</script>
+{% endblock %}

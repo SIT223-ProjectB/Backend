@@ -57,3 +57,16 @@ class AssetStatus(db.Model):
 	def_location = db.Column(db.String(255), nullable=False)
 	last_updated = db.Column(db.DateTime, default=datetime.utcnow)
 
+class AssetStatusLog(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	type = db.Column(db.String(50), nullable=False)
+	ass_id = db.Column(db.String(20), db.ForeignKey('assets.tracking_code'), nullable=False)
+	status = db.Column(db.String(255), nullable=False)
+	note = db.Column(db.Text, nullable=False)
+	location = db.Column(db.String(255), nullable=False)
+	def_location = db.Column(db.String(255), nullable=False)
+	#version = db.Column(db.Integer, default=0)
+	timestamp = db.Column(db.DateTime,default=datetime.utcnow, nullable=False)
+
+
+

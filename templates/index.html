@@ -15,7 +15,8 @@
 							<a class="dropdown-item" href="{{ url_for('ui.ui_assets') }}#add">Add Asset</a>
 						</div>
 					</div>
-					<a class="nav-item nav-link" href="#">Users</a>
+					<a class="nav-item nav-link" href="{{ url_for('ui.ui_logs') }}">Asset Logs</a>
+					<a class="nav-item nav-link" href="{{ url_for('ui.ui_users') }}">Users</a>
 					<span class="px-5"></span>
 					<div class="nav-item py-2 navbar-text">Logged in as <span class="font-weight-bold">{{ g.user.name }}</span></div>
 					<span class="px-3"></span>
