@@ -1,21 +1,21 @@
-Asset ID,Type,Status,Note,Location,Default Location,Last_Updated
-AA123,Truck,faulty,Awaiting deployment,VIC,SA,2020-09-23 02:36:04.096633
-HS333,Container,faulty,In transit to SA warehouse,SA,WA,2020-09-23 02:36:04.102886
-CA231,Ship,faulty,Idle awaiting delivery,QLD,VIC,2020-09-23 02:36:04.109202
-KL384,Forklift,faulty,Replacing QLD forklift pending delivery,NT,QLD,2020-09-23 02:36:04.122588
-XE048,Computer,faulty,Computer awaiting repairs ticket #A338,VIC,VIC,2020-09-23 02:36:04.128994
-HD084,Documents,lost,Documents reported lost to management,QLD,QLD,2020-09-23 02:36:04.135543
-EF049,Car,available,Idle assignable to staff as needed,VIC,NT,2020-09-23 02:36:04.142514
-BA124,Truck,faulty,Awaiting new components ticket #C322,NT,QLD,2020-09-23 02:36:04.149024
-CH421,Truck,moved,In transit transferred to NT warehouse,NT,QLD,2020-09-23 02:36:04.155537
-TA323,Car,available,To be assigned to new NT warehouse manager,VIC,NT,2020-09-23 02:36:04.166441
-MN129,Container,available,Awaiting loading,WA,WA,2020-09-23 02:36:04.172498
-GF903,Computer,available,Awaiting transfer to new NT warehouse,VIC,NT,2020-09-23 02:36:04.178872
-AS564,Documents,moved,Awaiting transfer to new NT warehouse,VIC,QLD,2020-09-23 02:36:04.185541
-FL583,Forklift,faulty,Possible decomission pending sign-off,QLD,QLD,2020-09-23 02:36:04.192498
-ZJ652,Crane,available,Pending deployment,SA,SA,2020-09-23 02:36:04.199488
-TA023,Car,moved,On loan to new NT warehouse,NT,QLD,2020-09-23 02:36:04.206625
-PO480,Forklift,lost,Could be behind the curtains,SA,SA,2020-09-23 02:36:04.212625
-MS123,Computer,available,In use,WA,WA,2020-09-23 02:36:04.219119
-AH943,Documents,available,Archived,WA,WA,2020-09-23 02:36:04.226509
-JK093,Forklift,available,Idle awaiting deployment,SA,VIC,2020-09-23 02:36:04.232705
+Asset ID,Type,Status,Note,Location,Default Location,Last_Updated
+AA123,Test,faulty,Awaiting deployment,Test,SA,2020-09-23 02:36:04.096633
+HS333,Container,faulty,In transit to SA warehouse,SA,WA,2020-09-23 02:36:04.102886
+CA231,Ship,faulty,Idle awaiting delivery,QLD,VIC,2020-09-23 02:36:04.109202
+KL384,Forklift,faulty,Replacing QLD forklift pending delivery,NT,QLD,2020-09-23 02:36:04.122588
+XE048,Computer,faulty,Computer awaiting repairs ticket #A338,VIC,VIC,2020-09-23 02:36:04.128994
+HD084,Documents,lost,Documents reported lost to management,QLD,QLD,2020-09-23 02:36:04.135543
+EF049,Car,available,Idle assignable to staff as needed,VIC,NT,2020-09-23 02:36:04.142514
+BA124,Truck,faulty,Awaiting new components ticket #C322,NT,QLD,2020-09-23 02:36:04.149024
+CH421,Truck,moved,In transit transferred to NT warehouse,NT,QLD,2020-09-23 02:36:04.155537
+TA323,Car,available,To be assigned to new NT warehouse manager,VIC,NT,2020-09-23 02:36:04.166441
+MN129,Container,available,Awaiting loading,WA,WA,2020-09-23 02:36:04.172498
+GF903,Computer,available,Awaiting transfer to new NT warehouse,VIC,NT,2020-09-23 02:36:04.178872
+AS564,Documents,moved,Awaiting transfer to new NT warehouse,VIC,QLD,2020-09-23 02:36:04.185541
+FL583,Forklift,faulty,Possible decomission pending sign-off,QLD,QLD,2020-09-23 02:36:04.192498
+ZJ652,Crane,available,Pending deployment,SA,SA,2020-09-23 02:36:04.199488
+TA023,Car,moved,On loan to new NT warehouse,NT,QLD,2020-09-23 02:36:04.206625
+PO480,Forklift,lost,Could be behind the curtains,SA,SA,2020-09-23 02:36:04.212625
+MS123,Computer,available,In use,WA,WA,2020-09-23 02:36:04.219119
+AH943,Documents,available,Archived,WA,WA,2020-09-23 02:36:04.226509
+JK093,Forklift,available,Idle awaiting deployment,SA,VIC,2020-09-23 02:36:04.232705

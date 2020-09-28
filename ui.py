@@ -52,7 +52,7 @@ def utility_processor():
 				last_update = "Today"
 			elif last_update.days == 1:
 				last_update = "Yesterday"
-			elif last_update < 7:
+			elif last_update.days < 7:
 				last_update = f"{last_update.days} days ago"
 			else:
 				last_update = f"{last_update.weeks} weeks ago"

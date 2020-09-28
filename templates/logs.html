@@ -22,13 +22,13 @@
 					<span class="px-3"></span>
 					<a class="nav-item btn btn-danger btn-sm py-2 text-white" href="{{ url_for('api.logout_user') }}">Logout</a>
 				</div>
-			</div> 
+			</div>
 		</nav>
 	</div>
 	<div class="card-block pt-2">
 		<div class="row px-5">
 			<div class="col-12">
-				<table id="assetTable" class="table table-striped" width="100%">
+				<table id="logsTable" class="table table-striped" width="100%">
 					<thead>
 						<tr>
 							<th scope="col">Tracking Code</th>
@@ -50,10 +50,9 @@
 								<td>{{ a.def_location }}</td>
                                 <td>{{ a.location }}</td>
                                 <td>{{ a.timestamp }}</td>
-								<td>{{ a.last_update }}</td>
 							</tr>
 						{% endfor %}
-						<button type = "button" onclick="exportTableToCSV('Assets.csv')" class="btn btn-primary" id="btn-spreadsheet">Export Selection to Spreadsheet</button>
+						<button type = "button" onclick="exportTableToCSV('Logs.csv')" class="btn btn-primary" id="btn-spreadsheet">Export Selection to Spreadsheet</button>
 						<button type = "button" class="btn btn-primary" style="margin-left: 5px" id="btn-spreadsheet-all">Export All to Spreadsheet</button>
 					</tbody>
 				</table>
@@ -100,48 +99,13 @@
 				window.location.reload()
 			}, timeout)
 		}
-
-		function downloadCSV(csv, filename) {
-			var csvFile;
-			var downloadLink;
-			csvFile = new Blob([csv], {type: "text/csv"});
-			downloadLink = document.createElement("a");
-			downloadLink.download = filename;
-			downloadLink.href = window.URL.createObjectURL(csvFile);
-			// Hide download link
-			downloadLink.style.display = "none";
-			// Add the link to DOM
-			document.body.appendChild(downloadLink);
-			// Click download link
-			downloadLink.click();
-		}
-		//used to read current selection of logs and create a csv file
-		function exportTableToCSV(filename) {
-			var csv = [];
-			var rows = document.querySelectorAll("#assetTable");
-			for (var i = 0; i < rows.length; i++) {
-				var row = [], cols = rows[i].querySelectorAll("td, th");
-				for (var j = 0; j < cols.length; j++)
-				{
-					//line break at end of each col
-					if(j % 8 == 0){
-						row.push("\n");
-					}
-					row.push(cols[j].innerText);
-				}
-				csv.push(row.join(","));
-			}
-			downloadCSV(csv.join("\n"), filename);
-			createAlert('success', 'Downloaded Selected Assets!')
-		}
-		
 		$('#btn-spreadsheet-all').on('click', function(e){
-			createAlert('success', 'Downloaded All Assets!')
+			createAlert('success', 'Downloaded All Logs!')
 			window.open('{{url_for('ui.download')}}?file=logs', '_blank')
 		})
 
 		// Data Table
-		$('#assetTable').DataTable({
+		$('#logsTable').DataTable({
 			"aaSorting": [],
 			columnDefs: [{
 				orderable: false,
@@ -150,8 +114,46 @@
 		})
 		$('.dataTables_length').addClass('bs-select');
 
-
 	})
+	function downloadCSV(csv, filename) {
+
+var csvFile;
+var downloadLink;
+csvFile = new Blob([csv], {type: "text/csv"});
+
+downloadLink = document.createElement("a");
+
+downloadLink.download = filename;
+
+downloadLink.href = window.URL.createObjectURL(csvFile);
+
+// Hide download link
+downloadLink.style.display = "none";
+
+// Add the link to DOM
+document.body.appendChild(downloadLink);
+
+// Click download link
+downloadLink.click();
+}
+//used to read current selection of logs and create a csv file
+function exportTableToCSV(filename) {
+var csv = [];
+var rows = document.querySelectorAll("#logsTable");
+for (var i = 0; i < rows.length; i++) {
+var row = [], cols = rows[i].querySelectorAll("td, th");
+for (var j = 0; j < cols.length; j++)
+{
+	//line break at end of each col
+	if(j % 7 == 0){
+		row.push("\n");
+	}
+	row.push(cols[j].innerText);
+}
+	csv.push(row.join(","));
+}
+downloadCSV(csv.join("\n"), filename);
+}
 
 
 </script>
