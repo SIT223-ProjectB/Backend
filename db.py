@@ -66,7 +66,7 @@ class AssetStatusLog(db.Model):
 	location = db.Column(db.String(255), nullable=False)
 	def_location = db.Column(db.String(255), nullable=False)
 	#version = db.Column(db.Integer, default=0)
-	timestamp = db.Column(db.DateTime,default=datetime.utcnow, nullable=False)
+	timestamp = db.Column(db.DateTime,default=datetime.utcnow)
 
 
 
