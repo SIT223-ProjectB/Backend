@@ -59,6 +59,12 @@
 						{% endfor %}
 						<button type="button" onclick="exportTableToCSV('Assets.csv')" class="btn btn-primary " id="btn-spreadsheet">Export Selection to Spreadsheet</button>
 						<button type="button" class="btn btn-primary " style="margin-left: 5px" id="btn-spreadsheet-all">Export All to Spreadsheet</button>
+						<button class="btn btn-success" style="margin-left: 5px" onclick="window.location = '#add'">
+							<span>Add Asset&nbsp;</span>
+							<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-cloud-plus-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+								<path fill-rule="evenodd" d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm.5 4a.5.5 0 0 0-1 0v1.5H6a.5.5 0 0 0 0 1h1.5V10a.5.5 0 0 0 1 0V8.5H10a.5.5 0 0 0 0-1H8.5V6z"/>
+							</svg>
+						</button>
 					</tbody>
 				</table>
 			</div>
@@ -383,7 +389,7 @@
 			modal.find('option[x-id="status"]').text(asset.status)
 			modal.find('option[value="'+asset.status_num+'"]').attr('selected', '')
 			modal.find('input[x-id="location"]').attr('placeholder', asset.location)
-			modal.find('textarea').text(asset.note)
+			modal.find('textarea').val(asset.note)
 		})
 
 		$('#assetEditBtn').on('click', function(event) {
@@ -407,7 +413,7 @@
 				'type': modal.find('input[x-id="type"]').val(),
 				'status': modal.find('select').val(),
 				'location': modal.find('input[x-id="location"]').val(),
-				'note': modal.find('textarea').text(),
+				'note': modal.find('textarea').val(),
 			}
 
 			var data = {'tracking_code': asset.id}

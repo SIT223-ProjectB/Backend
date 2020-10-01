@@ -39,7 +39,7 @@ def utility_processor():
 	def list_users_quick(limit=10):
 		if limit<=0:
 			limit = 1
-		return [dict(username=u.username, name=u.name) for u in User.query.filter_by(active=True).all()][:limit]
+		return [dict(id=u.id, username=u.username, name=u.name) for u in User.query.filter_by(active=True).all()][:limit]
 
 	def list_users():
 		return [dict(id=u.id, username=u.username, name=u.name, active=bool(u.active)) for u in User.query.all()]
