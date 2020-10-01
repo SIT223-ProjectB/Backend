@@ -4,3 +4,4 @@ flask_sqlalchemy
 flask_httpauth
 passlib
 itsdangerous
+mysql
