@@ -55,7 +55,7 @@ def utility_processor():
 			elif last_update.days < 7:
 				last_update = f"{last_update.days} days ago"
 			else:
-				last_update = f"{last_update.weeks} weeks ago"
+				last_update = f"{last_update.days // 7} weeks ago"
 			assets.append(dict(id=a.ass_id, type=a.asset.type, last_update=last_update, status=a.status, def_location=a.def_location, location=a.location, note=a.note))
 		return assets
 	#gets all assets logs to display on logs.html
@@ -65,7 +65,7 @@ def utility_processor():
 			log.append(dict(id=a.ass_id, type=a.type, timestamp=a.timestamp, status=a.status, def_location=a.def_location, location=a.location, note=a.note))
 		return log
 
-	def latest_updated_assets(days=3, limit=10):
+	def latest_updated_assets(days=7, limit=10):
 		date = datetime.utcnow() - timedelta(days=days)
 		assets = []
 		for a in AssetStatus.query.filter(AssetStatus.last_updated >= date).all():
@@ -74,10 +74,10 @@ def utility_processor():
 				last_update = "Today"
 			elif last_update.days == 1:
 				last_update = "Yesterday"
-			elif last_update < 7:
+			elif last_update.days < 7:
 				last_update = f"{last_update.days} days ago"
 			else:
-				last_update = f"{last_update.weeks} weeks ago"
+				last_update = f"{last_update.days // 7} weeks ago"
 			assets.append(dict(id=a.ass_id, type=a.asset.type, last_update=last_update, status=a.status, def_location=a.def_location, location=a.location, note=a.note))
 		return assets[:limit]
 

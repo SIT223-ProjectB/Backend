@@ -97,7 +97,7 @@
 			var asset = $(this).attr('asset-id')
 			$.ajax({
 				type: "POST",
-				url: "{{ url_for('api.get_asset') }}",
+				url: "{{ url_for('api.get_asset') }}?_=" + new Date().getTime(),
 				contentType: "application/json",
 				dataType: "json",
 				data: JSON.stringify({"tracking_code": asset}),

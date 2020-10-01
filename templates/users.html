@@ -192,7 +192,7 @@
 			var username = input.val()
 			$.ajax({
 				type: 'GET',
-				url: '{{ url_for('api.check_user') }}?username='+username,
+				url: '{{ url_for('api.check_user') }}?username='+username+'&_=' + new Date().getTime(),
 				success: function(data) {
 					if (data.success == true) {
 						input.removeClass('is-invalid').addClass('is-valid')
@@ -264,7 +264,7 @@
 			if (changed) {
 				$.ajax({
 					type: 'POST',
-					url: '{{ url_for('api.users_update') }}',
+					url: '{{ url_for('api.users_update') }}?_=' + new Date().getTime(),
 					contentType: 'application/json',
 					dataType: 'JSON',
 					data: JSON.stringify(data),
@@ -308,7 +308,7 @@
 			// Send delete request to server
 			$.ajax({
 				type: 'POST',
-				url: '{{ url_for('api.delete_user') }}',
+				url: '{{ url_for('api.delete_user') }}?_=' + new Date().getTime(),
 				contentType: 'application/json',
 				dataType: 'json',
 				data: JSON.stringify(data),

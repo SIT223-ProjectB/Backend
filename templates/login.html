@@ -66,7 +66,7 @@
 			// Get auth token
 			$.ajax({
 				type: "GET",
-				url: "/api/token",
+				url: "/api/token?_=" + new Date().getTime(),
 				contentType: "application/json",
 				username: user,
 				password: pass,

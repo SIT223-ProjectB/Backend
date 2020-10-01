@@ -338,7 +338,7 @@
 			
 			$.ajax({
 				type: 'POST',
-				url: '{{ url_for('api.add_asset') }}',
+				url: '{{ url_for('api.add_asset') }}?_=' + new Date().getTime(),
 				contentType: 'application/json',
 				dataType: 'json',
 				data: JSON.stringify(data),
@@ -426,7 +426,7 @@
 			if (changed) {
 				$.ajax({
 					type: 'POST',
-					url: '{{ url_for('api.asset_status_update') }}',
+					url: '{{ url_for('api.asset_status_update') }}?_=' + new Date().getTime(),
 					contentType: 'application/json',
 					dataType: 'JSON',
 					data: JSON.stringify(data),
@@ -468,7 +468,7 @@
 			// Send delete request to server
 			$.ajax({
 				type: 'POST',
-				url: '{{ url_for('api.delete_asset') }}',
+				url: '{{ url_for('api.delete_asset') }}?_=' + new Date().getTime(),
 				contentType: 'application/json',
 				dataType: 'json',
 				data: JSON.stringify(data),
